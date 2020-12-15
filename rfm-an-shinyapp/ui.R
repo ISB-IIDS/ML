@@ -13,7 +13,8 @@ library(shiny)
 shinyUI(fluidPage(theme = "bootstrap.css",
   
   # Application title
-  titlePanel("RFM Analysis"),
+  #titlePanel("RFM Analysis"),
+  titlePanel(title=div(img(src="logo.png",align='right'),"RFM Analysis")),
   
   # Sidebar with a slider input for number of bins 
   sidebarLayout(
