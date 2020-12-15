@@ -13,11 +13,12 @@ library(magrittr)
 library(tidytext)
 library(dplyr)
 library(tidyr)
-
+library(visNetwork)
 
 shinyUI(fluidPage(
   
- titlePanel("Basic Text Analysis"),
+# titlePanel("Basic Text Analysis"),
+  titlePanel(title=div(img(src="logo.png",align='right'),"Basic Text Analysis")),
   
   # Input in sidepanel:
   sidebarPanel(

@@ -5,9 +5,11 @@
 library("shiny")
 #library("foreign")
 
-shinyUI(pageWithSidebar(
+shinyUI(fluidPage(
   # Header:
-  headerPanel("Segmentation"),
+ # headerPanel("Segmentation"),
+  titlePanel(title=div(img(src="logo.png",align='right'),"Segmentation")),
+  
   # Input in sidepanel:
   sidebarPanel(
 
