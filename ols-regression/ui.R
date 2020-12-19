@@ -7,7 +7,8 @@ library("shiny")
 
 shinyUI(pageWithSidebar(
   # Header:
-  headerPanel("OLS App"),
+  #headerPanel("OLS App"),
+  titlePanel(title=div(img(src="logo.png",align='right'),"OLS App")),
   # Input in sidepanel:
   sidebarPanel(
 
