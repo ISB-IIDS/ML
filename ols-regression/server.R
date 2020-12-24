@@ -276,15 +276,15 @@ ols2 = reactive({
   })
 
 output$resplot1 = renderPlot({
-  plot(ols()$residuals)
+  plot(ols()$residuals, ylab="Residuals")
 })
 
 output$resplot2 = renderPlot({
-  plot(ols()$residuals,ols()$fitted.values)
+  plot(ols()$residuals,ols()$fitted.values, xlab="Predicted Y", ylab="Residuals") #
 })
 
 output$resplot3 = renderPlot({
-  plot(mydata()[,input$yAttr],ols()$fitted.values)#
+  plot(mydata()[,input$yAttr],ols()$fitted.values, xlab="Actual Y", ylab="Predicted Y")# , 
 })
 
 
