@@ -1,5 +1,5 @@
 ####################################################
-#      Summary & OLS App                           #
+#      Summary & OLS App IIDS                          #
 ####################################################
 
 library("shiny")
@@ -8,7 +8,8 @@ library("shiny")
 shinyUI(pageWithSidebar(
   # Header:
   #headerPanel("OLS App"),
-  titlePanel(title=div(img(src="logo.png",align='right'),"OLS App")),
+  headerPanel(title=div(img(src="isb.png",align = "right"), h2("Regression App", style="bold"))),
+  #titlePanel(title=div(img(src="logo.png",align='right'),"OLS App")),
   # Input in sidepanel:
   sidebarPanel(
 
