@@ -257,7 +257,7 @@ output$validation = renderPrint({
   if (is.null(input$file)) {return(NULL)}
     y = Dataset()[,input$yAttr]
     yhat = as.integer(ols()$fitted.values>0.5)
-    confusion_matrix = table(y,yhat)
+    confusion_matrix = table(yhat,y)
     accuracy = (sum(diag(confusion_matrix))/sum(confusion_matrix))*100
     out = list(Confusion_matrix_of_Validation = confusion_matrix, Accuracy_of_Validation = accuracy)
     out
@@ -298,9 +298,9 @@ output$downloadData1 <- downloadHandler(
   }
 )
 output$downloadData <- downloadHandler(
-  filename = function() { "califhouse.csv" },
+  filename = function() { "pregnancy.csv" },
   content = function(file) {
-    write.csv(read.csv("data/califhouse.csv"), file, row.names=F, col.names=F)
+    write.csv(read.csv("data/pregnancy.csv"), file, row.names=F, col.names=F)
   }
 )
 output$downloadData2 <- downloadHandler(

@@ -43,6 +43,13 @@ library(multiROC)
     }
   })
   
+  pred.readdata <- reactive({
+    if (is.null(input$filep)) { return(NULL) }
+    else{
+      readdata <- as.data.frame(read.csv(input$filep$datapath ,header=TRUE, sep = ","))
+      return(readdata)
+    }
+  })
   
   # Select variables:
   output$Choicevarselect <- renderUI({
@@ -173,6 +180,11 @@ ind.features=paste(input$IndividualfeaturesAttr,collapse = "+")
 
     return(a)
   })
+  
+  ols.pred = reactive({
+    b <- predict(ols(), newdata=pred.readdata())
+    return(b)
+  })
 
   
   output$olssummary = renderPrint({
@@ -253,7 +265,7 @@ ind.features=paste(input$IndividualfeaturesAttr,collapse = "+")
   )
   
   output$downloadData1 <- downloadHandler(
-    filename = function() { "Predicted Data.csv" },
+    filename = function() { "Predicted Probabilities.csv" },
     content = function(file) {
       data.fit=(fitted(object = ols(), outcome=FALSE))
       trial=Rfast::rowMaxs(data.fit,value = FALSE)
@@ -266,6 +278,15 @@ ind.features=paste(input$IndividualfeaturesAttr,collapse = "+")
       write.csv(data.try, file, row.names=F, col.names=F)
     }
   )  
+  
+  
+  output$downloadData2 <- downloadHandler(
+    filename = function() { "Prediction New Data.csv" },
+    content = function(file) {
+    write.csv(ols.pred(), file, row.names=F, col.names=F)
+    }
+  ) 
+  
   # output$resplot2 = renderPlot({
   #    plot(ols()$residuals,ols()$fitted.values)
   #  })
