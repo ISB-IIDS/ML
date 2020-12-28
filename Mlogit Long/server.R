@@ -188,11 +188,15 @@ ind.features=paste(input$IndividualfeaturesAttr,collapse = "+")
 
   
   output$olssummary = renderPrint({
+    if (is.null(input$file)) {return(NULL)}
+    else {
   summary(ols())
+    }
    #print(ols())
   })
   output$confusionmatrix = renderPrint({
-    
+    if (is.null(input$file)) {return(NULL)}
+    else {
     data.fit=(fitted(object = ols(), outcome=FALSE))
     trial=Rfast::rowMaxs(data.fit,value = FALSE)
     data.fit=as.data.frame(data.fit)
@@ -203,9 +207,12 @@ ind.features=paste(input$IndividualfeaturesAttr,collapse = "+")
     data.try=as.data.frame(data.fit)
     
     caret::confusionMatrix(as.factor(data.try$predict),as.factor(data.try$actual))
+    }
   })
   
   output$probablities = renderPrint({
+    if (is.null(input$file)) {return(NULL)}
+    else {
   data.fit=(fitted(object = ols(), outcome=FALSE))
     trial=Rfast::rowMaxs(data.fit,value = FALSE)
     data.fit=as.data.frame(data.fit)
@@ -216,9 +223,11 @@ ind.features=paste(input$IndividualfeaturesAttr,collapse = "+")
   data.fit$obs_ID=as.vector(Dataset()[which(choice.col==1),input$IndividualAttr])
   #data.try=as.data.frame(data.fit)
   print(data.fit)
+    }
 })
   output$ROC = renderPlot({
-    
+    if (is.null(input$file)) {return(NULL)}
+    else {  
     data.fit=(fitted(object = ols(), outcome=FALSE))
     trial=Rfast::rowMaxs(data.fit,value = FALSE)
     data.fit=as.data.frame(data.fit)
@@ -254,7 +263,8 @@ ind.features=paste(input$IndividualfeaturesAttr,collapse = "+")
             legend.justification=c(1, 0), legend.position=c(.95, .05),
             legend.title=element_blank(),
             legend.background = element_rect(fill=NULL, size=0.5,
-                                             linetype="solid", colour ="black"))
+                                           linetype="solid", colour ="black"))
+  }
   })
   
   output$downloadData <- downloadHandler(
