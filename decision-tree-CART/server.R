@@ -340,7 +340,7 @@ shinyServer(function(input, output,session) {
   output$plot3 = renderPlot({
     if (is.null(input$file)) {return(NULL)}
     
-    title1 = paste("Decision Tree for", input$yAttr)
+    title1 = paste("decision tree of", input$yAttr, "in test data")
     
   post((fit.rt()$model), 
        # file = "tree2.ps", 
