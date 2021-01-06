@@ -88,7 +88,7 @@ shinyUI(pageWithSidebar(
                 # tabPanel("Data with predicted Y",tableOutput("datatable")),
               tabPanel("Prediction New Data", 
                        h4(p("Download Predictions")),
-                       downloadButton('downloadData2', 'Download output (works only in browsers)'))
+                       downloadButton('downloadData2', 'Download prediction probabilities (works only in browsers)'))
               
                 
     )#type tabs

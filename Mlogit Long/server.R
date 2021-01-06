@@ -293,8 +293,11 @@ ind.features=paste(input$IndividualfeaturesAttr,collapse = "+")
   output$downloadData2 <- downloadHandler(
     filename = function() { "Prediction New Data.csv" },
     content = function(file) {
-    write.csv(ols.pred(), file, row.names=F, col.names=F)
-    }
+      if (is.null(input$filep)) {return(NULL)}
+      else { 
+      write.csv(ols.pred(), file, row.names=F, col.names=F) 
+      }
+                              }
   ) 
   
   # output$resplot2 = renderPlot({
