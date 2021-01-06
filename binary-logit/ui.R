@@ -7,8 +7,8 @@ library("shiny")
 
 shinyUI(pageWithSidebar(
   # Header:
-  #headerPanel("Binary Logit App"),
-  headerPanel(title=div(img(src="isb.png",align = "right"), h2("Binary Logit App", style="bold"))),
+  #headerPanel("Logistic Regression (Binary Logit) App"),
+  headerPanel(title=div(img(src="isb.png",align = "right"), h2("Logistic Regression (Binary Logit) App", style="bold"))),
   # Input in sidepanel:
   sidebarPanel(
 
@@ -51,16 +51,18 @@ shinyUI(pageWithSidebar(
                 tabPanel("Summary Logit", h4('Confusion Matrix'), verbatimTextOutput("validation"),
                          h4("Summary Logit Model"),verbatimTextOutput("olssummary")),
                          #h4("Summary OLS standardized model"), verbatimTextOutput("olssummarystd")),
-                tabPanel("Data with predicted Y", h4("Download Input Data with Predicted Y"),
+                tabPanel("Data with predicted Y", h4("Download Input Data with Predicted Probability of Y=1"),
                          downloadButton('downloadData2', 'Download Data (Works only in browser)'),
                          br(),br(),tableOutput("datatable")),
                # tabPanel("Correlation",h4("Correlation Table - Input data"), verbatimTextOutput("correlation"),
                #          h4("Correlation Visulization - Input Data"),plotOutput("corplot")),
-                tabPanel("ROC", h4("Confusion Matrix Summary"),verbatimTextOutput("confusionmatrix"),
+                tabPanel("ROC", 
+                         sliderInput('cutoff','Cutoff Probability (default=0.5)',0,1,0.5),
+                         h4("Confusion Matrix Summary"),verbatimTextOutput("confusionmatrix"),
                          h4("ROC Curve"),plotOutput("roc")),
-                tabPanel("Residuals Plot",
+                #tabPanel("Residuals Plot",
                       #   h4("Fitted Values vs Residuals - Input Data"), plotOutput("resplot2"),
-                         h4("Fitted Values vs Y - Input Data"), plotOutput("resplot3")),
+                      #   h4("Fitted Values vs Y - Input Data"), plotOutput("resplot3")),
                 tabPanel("Prediction New Data",br(),
                          h4("First 10 rows of predicted data (upload prediction data)"),
                          p('"Yhat" column is the predicted value.'),

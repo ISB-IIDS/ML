@@ -218,20 +218,32 @@ ols2 = reactive({
   })
 
 output$resplot1 = renderPlot({
+  if (is.null(input$file)) {return(NULL)}
+  else {
   plot(ols()$residuals)
+  }
 })
 
 output$resplot2 = renderPlot({
+  if (is.null(input$file)) {return(NULL)}
+  else {
   plot(ols()$residuals, ols()$fitted.values)
+  }
 })
 
 output$resplot3 = renderPlot({
+  if (is.null(input$file)) {return(NULL)}
+  else {
   plot(ols()$fitted.values, mydata()[,input$yAttr])#
+  }
 })
 
 
 output$olssummary = renderPrint({
+  if (is.null(input$file)) {return(NULL)}
+  else {
   summary(ols())
+  }
   })
 
 output$olssummarystd = renderPrint({
@@ -239,18 +251,22 @@ output$olssummarystd = renderPrint({
 })
 
 output$datatable = renderTable({
-  Y.hat = ols()$fitted.values
-  data.frame(Y.hat,mydata())
+  if (is.null(input$file)) {return(NULL)}
+  else {
+  Y.Prob = ols()$fitted.values
+  data.frame(Y.Prob,mydata())
+  
+  }
 })
 
 inputprediction = reactive({
   val = predict(ols(),Dataset(), type='response')
-  out = data.frame(Yhat = val, Dataset())
+  out = data.frame(Y.Prob = val, Dataset())
 })
 
 predicted = reactive({
   val = predict(ols(),Dataset.Predict(), type='response')
-  out = data.frame(Yhat = val, pred.readdata())
+  out = data.frame(Y.Prob = val, pred.readdata())
 })
 
 output$validation = renderPrint({
@@ -264,15 +280,20 @@ output$validation = renderPrint({
 })
 
 output$confusionmatrix = renderPrint({
-  data.fit = as.integer(ols()$fitted.values>0.5)
+  if (is.null(input$file)) {return(NULL)}
+  else {
+  data.fit = as.integer(ols()$fitted.values>input$cutoff)
   data.act = (Dataset()[,input$yAttr])
   confusionMatrix(as.factor(data.fit),as.factor(data.act))
+  }
 })
 
 
 
 
 output$roc = renderPlot({ 
+  if (is.null(input$file)) {return(NULL)}
+  else {
   pred.val = predict(ols(),Dataset(),type="response")
   pred.lm = prediction(pred.val,Dataset()[,input$yAttr])
   perf.lm = performance(pred.lm,"tpr", "fpr")
@@ -282,6 +303,7 @@ output$roc = renderPlot({
   plot(perf.lm, main = c("AUC", auc_ROCR@y.values[[1]]))
   #lines(x = c(0,1), y = c(0,1))
   abline(a=0,b=1)
+  }
 })
 
 output$prediction =  renderPrint({
@@ -294,7 +316,7 @@ output$downloadData1 <- downloadHandler(
   filename = function() { "Predicted Data.csv" },
   content = function(file) {
     if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
-    write.csv(prediction(), file, row.names=F, col.names=F)
+    write.csv(predicted(), file, row.names=F, col.names=F)
   }
 )
 output$downloadData <- downloadHandler(
