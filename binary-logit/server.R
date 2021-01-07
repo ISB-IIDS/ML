@@ -68,7 +68,7 @@ Dataset.temp = reactive({
 output$fxvarselect <- renderUI({
   if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
   
-  checkboxGroupInput("fxAttr", "Select factor variables in X",
+  checkboxGroupInput("fxAttr", "Select factor (categorical) variables in X",
                      setdiff(colnames(Dataset.temp()),input$yAttr),"" )
   
 })
