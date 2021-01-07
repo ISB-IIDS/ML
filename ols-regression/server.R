@@ -64,7 +64,7 @@ Dataset.temp = reactive({
 output$fxvarselect <- renderUI({
   if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
   
-  checkboxGroupInput("fxAttr", "Factor variable in X",
+  checkboxGroupInput("fxAttr", "Select factor (categorical) variables in X",
                      setdiff(colnames(Dataset.temp()),input$yAttr),"" )
   
 })
@@ -277,6 +277,7 @@ ols2 = reactive({
 
 output$resplot1 = renderPlot({
   plot(ols()$residuals, ylab="Residuals")
+  
 })
 
 output$resplot2 = renderPlot({
