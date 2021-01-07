@@ -6,18 +6,18 @@ shinyUI(
   fluidPage(
     
   #  titlePanel("Classification and Regression Tree"),
-    headerPanel(title=div(img(src="isb.png",align = "right"), h2("Classification and Regression Tree App", style="bold"))),
+    headerPanel(title=div(img(src="isb.png",align = "right"), h2("Decision Tree App", style="bold"))),
     
     sidebarLayout(
       
       sidebarPanel(
         # Upload data:
         h4(p(" Data Input")),
-        fileInput("file", "Upload Model Training data in csv"),
-        sliderInput('sample','Validation Sample Proportion',10,50,30),
+        fileInput("file", "Upload data (csv file)"),
+        sliderInput('sample','test sample percentage',10,40,25),
         # h4(p("Select Response Variable")),
-        sliderInput('cp','Complexity Parameter',0,0.1,0),
-        fileInput("filep", "Upload Prediction data in csv"),
+        sliderInput('cp','complexity parameter',0,0.1,0),
+        fileInput("filep", "Upload data for prediction (csv file)"),
         htmlOutput("yvarselect"),
         htmlOutput("xvarselect"),
         htmlOutput("fxvarselect")
@@ -67,7 +67,7 @@ shinyUI(
                              # h4('Regression Tree'),
                              plotOutput("plot3",height = 1100),
                        #      h4('Visualize cross-validation results'),
-                        #     plotOutput("plot1",height = 600, width = 850)
+                             plotOutput("plot1",height = 600, width = 850)
                              ),                   
                #     tabPanel("Node labels",plotOutput("plot2",height = 600, width = 850),
                 #             #h4("First column is assigned node number for each obsrvn in model training data"),

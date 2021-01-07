@@ -41,7 +41,7 @@ shinyServer(function(input, output,session) {
   output$yvarselect <- renderUI({
     if (is.null(input$file)) {return(NULL)}
     
-    selectInput("yAttr", "Select Y variable (If it is a factor variable mark it as Factor variable)",
+    selectInput("yAttr", "Select Y variable (Is it is a categorical variable? mark it as factor variable)",
                 colnames(readdata()), colnames(readdata())[1])
     
   })
@@ -62,8 +62,8 @@ shinyServer(function(input, output,session) {
   output$fxvarselect <- renderUI({
     if (identical(readdata.temp(), '') || identical(readdata.temp(),data.frame())) return(NULL)
     
-    checkboxGroupInput("fxAttr", "Factor variables",
-                       colnames(readdata.temp()) )
+    checkboxGroupInput("fxAttr", "Select factor (categorical) variables",
+                       colnames(readdata.temp()),input$yAttr )
     
   })
   
