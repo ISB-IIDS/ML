@@ -8,7 +8,7 @@ library("shiny")
 shinyUI(fluidPage(
   # Header:
  # headerPanel("Segmentation"),
-  titlePanel(title=div(img(src="logo.png",align='right'),"Segmentation")),
+  titlePanel(title=div(img(src="logo.png",align='right'),"Segmentation and Targeting")),
   
   # Input in sidepanel:
   sidebarPanel(
