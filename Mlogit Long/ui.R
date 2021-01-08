@@ -24,7 +24,7 @@ shinyUI(pageWithSidebar(
     htmlOutput("Alternativesvarselect"),
     htmlOutput("Alternativefeaturesvarselect"),
     htmlOutput("Individualfeaturesvarselect"),
-    fileInput("filep", "Upload prediction data (csv file with header)"),
+    fileInput("filep", "Upload new data for prediction (csv file with header)"),
     br()
   ),
   # Main:
@@ -87,7 +87,7 @@ shinyUI(pageWithSidebar(
                 #          plotOutput("resplot1")),
                 # tabPanel("Data with predicted Y",tableOutput("datatable")),
               tabPanel("Prediction New Data", 
-                       h4(p("Download Predictions")),
+                       h4(p("Download predictions for new data")),
                        downloadButton('downloadData2', 'Download prediction probabilities (works only in browsers)'))
               
                 

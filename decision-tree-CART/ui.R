@@ -17,7 +17,7 @@ shinyUI(
         sliderInput('sample','test sample percentage',10,40,25),
         # h4(p("Select Response Variable")),
         sliderInput('cp','complexity parameter',0,0.1,0),
-        fileInput("filep", "Upload data for prediction (csv file)"),
+        fileInput("filep", "Upload new data for prediction (csv file)"),
         htmlOutput("yvarselect"),
         htmlOutput("xvarselect"),
         htmlOutput("fxvarselect")
@@ -55,12 +55,17 @@ shinyUI(
                              verbatimTextOutput('imp'),
                              h4('Number of Rows and Columns in Training Data'),
                              verbatimTextOutput('trainobs'),
-                             h4('Model Accuracy in Training Data'),
+                             h4('Model Accuracy/Error in Training Data'),
                              verbatimTextOutput("validation"),
                              h4('Number of Rows and Columns in Test Data'),
                              verbatimTextOutput('testobs'),
-                             h4('Model Accuracy in Test Data'),
-                             verbatimTextOutput("validation1")
+                             h4('Model Accuracy/Error in Test Data'),
+                             verbatimTextOutput("validation1"),
+                            # h4("First 10 predictions of train data"),
+                            # p('"Yhat" column is the predicted value.'),
+                            # verbatimTextOutput('predictionorg'),
+                             h4("Download Input Data with Predictions"),
+                             downloadButton('downloadData0', 'Download predictions (Works only in browser)')
                              ),
                     tabPanel('Detailed summary of splits',verbatimTextOutput("summary")),
                     tabPanel("Decision Tree",
@@ -79,14 +84,14 @@ shinyUI(
                       #       downloadButton('downloadData3','Download nodes data (Works only in browser)')
                        #      ),
                     #tabPanel("Variable",verbatimTextOutput('imp')),
-                    tabPanel("Prediction",br(),
-                             h4('Number of Rows and Columns in Prediction Data'),
-                             verbatimTextOutput('predictobs'),
-                             h4("First 10 rows of predicted data"),
+                    tabPanel("Prediction New Data",br(),
+                             #h4('Number of Rows and Columns in New Prediction Data'),
+                             #verbatimTextOutput('predictobs'),
+                             h4("First 10 rows of new data with predictions"),
                              p('"Yhat" column is the predicted value.'),
                              verbatimTextOutput('prediction'),
-                             h4("Download Predicted data"),
-                             downloadButton('downloadData1', 'Download Predicted data (Works only in browser)')
+                             h4("Download new data with predictions"),
+                             downloadButton('downloadData1', 'Download predictions (Works only in browser)')
                              )
                              
         ) # end of tabsetPanel

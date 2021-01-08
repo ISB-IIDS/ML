@@ -102,7 +102,7 @@ shinyServer(function(input, output,session) {
     fa = which(Class %in% c("factor","character"))
     nu.data = data[,nu] 
     fa.data = data[,fa] 
-    Summary = list(Numeric.data = round(stat.desc(nu.data)[c(4,5,6,8,9,12,13),] ,4), factor.data = describe(fa.data))
+    Summary = list(Numeric.data = round(stat.desc(nu.data)[c(4,5,6,8,9,12,13),] ,3), factor.data = describe(fa.data))
     
     a = seq(from = 0, to=200,by = 4)
     j = length(which(a < ncol(nu.data)))
@@ -247,6 +247,26 @@ shinyServer(function(input, output,session) {
     return(out)    
     
   })
+  
+  predictionorg = reactive({
+    if (class(train_data()[,c(input$yAttr)]) == "factor"){
+      
+      fit.rt <- fit.rt()$model
+      pr <- as.party(fit.rt)    # thus, we use same object 'rp' from the raprt package
+      val3 = predict(pr, newdata = Dataset(),type="response")
+      
+    } 
+    else {
+      fit.rt <- fit.rt()$model
+      pr <- as.party(fit.rt)    # thus, we use same object 'rp' from the raprt package
+      val3 = predict(pr, newdata = Dataset())
+      
+    }
+    
+    out = data.frame(Yhat = val3, readdata())
+    return(out)    
+    
+  })
 #---------------------------------------------------------------  
   
 
@@ -257,7 +277,7 @@ shinyServer(function(input, output,session) {
       y = test_data()[,input$yAttr]
       yhat = fit.rt()$validation1
     confusion_matrix = table(y,yhat)
-    accuracy = (sum(diag(confusion_matrix))/sum(confusion_matrix))*100
+    accuracy = (sum(diag(confusion_matrix))/sum(confusion_matrix))
     out = list(Confusion_matrix_of_Validation = confusion_matrix, Accuracy_of_Validation = accuracy)
     } else {
     dft = data.frame(scale(data.frame(y = test_data()[,input$yAttr], yhat = fit.rt()$validation1)))
@@ -274,7 +294,7 @@ shinyServer(function(input, output,session) {
       y = train_data()[,input$yAttr]
       yhat = fit.rt()$validation
       confusion_matrix = table(y,yhat)
-      accuracy = (sum(diag(confusion_matrix))/sum(confusion_matrix))*100
+      accuracy = (sum(diag(confusion_matrix))/sum(confusion_matrix))
       out = list(Confusion_matrix_of_Validation = confusion_matrix, Accuracy_of_Validation = accuracy)
     } else {
       dft = data.frame(scale(data.frame(y = train_data()[,input$yAttr], yhat = fit.rt()$validation)))
@@ -401,8 +421,18 @@ shinyServer(function(input, output,session) {
     if (is.null(input$filep)) {return(NULL)}
     head(prediction(),10)
   })
-  
+  output$predictionorg =  renderPrint({
+    if (is.null(input$filep)) {return(NULL)}
+    head(predictionorg(),10)
+  })  
   #------------------------------------------------#
+  output$downloadData0 <- downloadHandler(
+    filename = function() { "Predicted Data.csv" },
+    content = function(file) {
+      if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
+      write.csv(predictionorg(), file, row.names=F, col.names=F)
+    }
+  )
   output$downloadData1 <- downloadHandler(
     filename = function() { "Predicted Data.csv" },
     content = function(file) {

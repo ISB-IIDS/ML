@@ -15,7 +15,7 @@ shinyUI(pageWithSidebar(
 
     h5(p("Data Input")),
     fileInput("file", "Upload input data (csv file with header)"),
-    fileInput("filep", "Upload prediction data (csv file with header)"),
+    fileInput("filep", "Upload new data for prediction (csv file with header)"),
     h5(p("Data Selection")),
     htmlOutput("yvarselect"),
     htmlOutput("xvarselect"),
@@ -63,11 +63,11 @@ shinyUI(pageWithSidebar(
                          plotOutput("resplot3",height = 800),h4("Residuals plot - Input Data"),
                          plotOutput("resplot1",height = 800)),
                 tabPanel("Prediction New Data",br(),
-                         h4("First 10 rows of predicted data (upload prediction data)"),
+                         h4("First 10 rows of predictions for new data (upload prediction data)"),
                          p('"Yhat" column is the predicted value.'),
                          verbatimTextOutput('prediction'),
-                         h4("Download Predicted Data"),
-                         downloadButton('downloadData1', 'Download data (Works only in browser)')      ) 
+                         h4("Download new data with predictions"),
+                         downloadButton('downloadData1', 'Download predictions (Works only in browser)')      ) 
                 )
       ) 
     ) 
