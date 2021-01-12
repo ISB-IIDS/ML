@@ -160,7 +160,9 @@ library(multiROC)
   rhs=reactive({
       if (length(input$IndividualfeaturesAttr)>=1){
 ind.features=paste(input$IndividualfeaturesAttr,collapse = "+")
+          if (length(input$AlternativefeaturesAttr)>=1){
          alt.features=(paste(input$AlternativefeaturesAttr,collapse = "+"))
+          } else {alt.features=0}       
          rhs=paste(alt.features,"|",ind.features,sep = "")
         }else{rhs=paste(input$AlternativefeaturesAttr,collapse = "+")}
       
