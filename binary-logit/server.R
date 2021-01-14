@@ -271,11 +271,11 @@ predicted = reactive({
 
 output$validation = renderPrint({
   if (is.null(input$file)) {return(NULL)}
-    y = Dataset()[,input$yAttr]
-    yhat = as.integer(ols()$fitted.values>0.5)
-    confusion_matrix = table(yhat,y)
+    y_actual = Dataset()[,input$yAttr]
+    yhat_predicted = as.integer(ols()$fitted.values>0.5)
+    confusion_matrix = table(yhat_predicted,y_actual)
     accuracy = (sum(diag(confusion_matrix))/sum(confusion_matrix))
-    out = list(Confusion_matrix_of_Validation = confusion_matrix, Percentage_Accuracy_Hit_Rate = accuracy)
+    out = list(Confusion_matrix = confusion_matrix, Accuracy_Hit_Rate = accuracy)
     out
 })
 
