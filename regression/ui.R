@@ -51,7 +51,7 @@ shinyUI(pageWithSidebar(
                          h4("Data Summary"),verbatimTextOutput("summary"),h4("Missing Data Rows"),verbatimTextOutput("missing")),
                 tabPanel("Summary OLS", h4("Summary OLS Model"),verbatimTextOutput("olssummary")),
                         # h4("Summary OLS standardized model"), verbatimTextOutput("olssummarystd")),
-                tabPanel("Input Data with predicted Y", h4("Download Input Data with Predicted Y"),
+                tabPanel("Input Data with Predictions", h4("Download Input Data with Predicted Y"),
                          downloadButton('downloadData2', 'Download Data (Works only in browser)'),
                          br(),br(),tableOutput("datatable")),
               #  tabPanel("Correlation",h4("Correlation Table - Input data"), verbatimTextOutput("correlation"),
