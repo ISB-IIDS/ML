@@ -8,6 +8,7 @@ if(!require("Hmisc")){install.packages("Hmisc")}
 if(!require("ggplot2")){install.packages("ggplot2")}
 if(!require("reshape2")){install.packages("reshape2")}
 if (!require("corrplot")) {install.packages("corrplot")}
+if (!require("hydroGOF")) {install.packages("hydroGOF")}
 #if (!require("PerformanceAnalytics")) {install.packages("PerformanceAnalytics")}
 
 library(shiny)
@@ -17,6 +18,7 @@ library(Hmisc)
 library(ggplot2)
 library(reshape2)
 library(corrplot)
+library(hydroGOF)
 #library(PerformanceAnalytics)
 
 # library(gplot)
@@ -295,6 +297,14 @@ output$olssummary = renderPrint({
 
 output$olssummarystd = renderPrint({
   summary(ols2())
+})
+
+output$validation = renderPrint({
+  if (is.null(input$file)) {return(NULL)}
+    dft = data.frame(scale(data.frame(y = mydata()[,input$yAttr], yhat = ols()$fitted.values  )))
+    mse.y = mse(dft$y,dft$yhat)
+    out = list(Mean_Square_Error_of_Standardized_Response = mse.y)
+    out
 })
 
 output$datatable = renderTable({

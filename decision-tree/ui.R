@@ -39,10 +39,10 @@ shinyUI(
                                Please note that prediction data should have all explanatory variables similar to model data.',align="justify"),
                              p('You can also adjust the complexity parameter in decision tree model to control size of the tree.'),
                              br(),
-                             h4(p("Download Sample Input Files")),
-                             downloadButton('downloadData', 'Download Sample Data (works only in browsers)'),
-                             br(), br(),
-                             p("*Please note that download will not work with RStudio interface. Download will work only in web-browsers.")
+                           #  h4(p("Download Sample Input Files")),
+                          #   downloadButton('downloadData', 'Download Sample Data (works only in browsers)'),
+                           #  br(), br(),
+                          #   p("*Please note that download will not work with RStudio interface. Download will work only in web-browsers.")
                             ), # close Overview tab
                             
                     #tabPanel("Data Summary",verbatimTextOutput('summarydata')),
