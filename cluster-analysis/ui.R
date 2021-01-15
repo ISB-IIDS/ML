@@ -13,10 +13,11 @@ shinyUI(fluidPage(
   # Input in sidepanel:
   sidebarPanel(
 
-    fileInput("file", "Upload data (csv file with header)"),
+    fileInput("file", "Upload data (csv file with header) first column must be observation id"),
+    htmlOutput("xvarselect"),
         
     selectInput("select", "Choose cluster algorithm", 
-                       c("K-Means","Hierarchical"), selected = "K-Means"),
+                       c("K-Means","Hierarchical",""), selected = ""),
     
     numericInput("Clust", "Number of clusters:", 3),
     
@@ -32,29 +33,19 @@ submitButton(text = "Apply Changes", icon("refresh"))
                          h4(p("Cluster Analysis")), 
                          p("One useful application of cluster analysis is in marketing. Market segementaion is a startegy which involves dividing a broad target market into subsets of consumers, businesses, or countries who have, or are perceived to have, common needs, interests, and priorities, and then designing and implementing strategies to target them. Market segmentation strategies are generally used to identify and further define the target customers, and provide supporting data for marketing plan elements such as positioning to achieve certain marketing plan objectives. Businesses may develop product differentiation strategies, or an undifferentiated approach, involving specific products or product lines depending on the specific demand and attributes of the target segment.",
                            align="justify"),
-                         a(href="https://en.wikipedia.org/wiki/Market_segmentation","- Wikipedia"),
-                         br(),br(),
-                    
                          h4(p("Data input")),
                          p("This application requires input data from the user. To do so, click on the Browse (in left side-bar panel) and upload the Segmentation data input file.
                             Note that this application can read only csv file(comma delimited file), so if you don't have csv input data file, first convert your data in csv format 
                             and then proceed. Make sure you have top row as variable names and first column as id in csv file"
                            ,align="justify"),
-                         img(src = "Segmentation.png", height = 180, width = 400),p('Segmentation Sample file'),
                          
                          p("Once csv file is uploaded successfully, by-default application will perform K-means segmentation with 3 segments. In left-side bar panel you can change the segmentation algorithm and number of segments. Click on Apply changes after making any change in the inputs. Accordingly results will be updates in all the tabs",
                            align="justify"),
-                         br(),
-                         downloadButton('downloadData1', 'Download sample file'), br(),
-                         
-                         p("Please note that download will not work with RStudio interface. Download will work only in web-browsers.",
-                         align="justify")
-                         #,img(src = "example1.png")
                           ),
                 #tabPanel("Data",h3(textOutput("caption"),tableOutput("table"))),
                 
                 tabPanel("Summary - Cluster Analysis",h3(textOutput("caption1")), h4(div(textOutput("caption2"),style = "color:Red")),
-                           plotOutput("plotpca",height = 400, width = 500),htmlOutput("summary")),
+                           plotOutput("plotpca",height = 400, width = 500),verbatimTextOutput("summary")),
                 
                 tabPanel("Plot",h3("Cluster Plot"), plotOutput("plot",height = 700, width = 840)),
                 tabPanel("Cluster Data",br(),

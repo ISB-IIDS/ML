@@ -54,7 +54,7 @@ output$yvarselect <- renderUI({
 output$xvarselect <- renderUI({
   if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
   
-  checkboxGroupInput("xAttr", "Select X variables",
+  checkboxGroupInput("xAttr", "Select variables to be used in segemantaion analysis",
                      setdiff(colnames(Dataset()),input$yAttr), setdiff(colnames(Dataset()),input$yAttr))
   
 })
