@@ -26,7 +26,6 @@ try(require("reshape2")||install.packages("reshape2"))
 try(require("wordcloud")||install.packages("wordcloud"))
 try(require("plotly")||install.packages("plotly"))
 try(require("tidytext")||install.packages("tidytext"))
-#try(require("tesseract")||install.packages("tesseract"))
 try(require("magrittr")||install.packages("magrittr"))
 try(require("caret")||install.packages("caret"))
 try(require("rpart")||install.packages("rpart"))
@@ -74,7 +73,7 @@ if(!require("mclust")) {install.packages("mclust")}
 if(!require("MASS")) {install.packages("MASS")}
 if(!require("scales")) {install.packages("scales")}
 if(!require("gridExtra")) {install.packages("gridExtra")}
-
+if(!require("tesseract")) {install.packages("tesseract")}
 
 
 
