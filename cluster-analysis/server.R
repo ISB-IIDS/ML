@@ -1,48 +1,38 @@
 ####################################################
 #      Cluster Analysis                         #
 ####################################################
+if(!require("shiny")) {install.packages("shiny")}
+if(!require("cluster")){install.packages("cluster")}
+if(!require("ggbiplot")){install.packages("ggbiplot")}
+if(!require("mclust")){install.packages("mclust")}
+if(!require("MASS")){install.packages("MASS")}
+if(!require("pastecs")){install.packages("pastecs")}
 
 library('shiny')
 library('cluster')
 library('ggbiplot')
 library('mclust')
 library('MASS')
-
-
-
-
-
+library('pastecs')# for stat.desc
 
 shinyServer(function(input, output){
   
-  
-  Dataset11 <- reactive({
-    if (is.null(input$file)) { return(NULL) }
-    else{
-      Dataset <- as.data.frame(read.csv(input$file$datapath ,header=TRUE, sep = ","))
-      rownames(Dataset) = Dataset[,1]
-      Dataset1 = Dataset[,2:ncol(Dataset)]
-      #Dataset = t(Dataset)
-      Dataset1 = as.data.frame(scale(Dataset1, center = T, scale = T))
-      return(Dataset1)
-    }
-  })
   
   Dataset <- reactive({
     if (is.null(input$file)) { return(NULL) }
     else{
       Dataset <- as.data.frame(read.csv(input$file$datapath ,header=TRUE, sep = ","))
       rownames(Dataset) = Dataset[,1]
-      Dataset1 = Dataset[,2:ncol(Dataset)]
-      return(Dataset1)
+      Dataset11 = Dataset[,2:ncol(Dataset)]
+      return(Dataset11)
     }
   })
   
   output$xvarselect <- renderUI({
     if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
     
-    checkboxGroupInput("xAttr", "Select variables to be used in segmentation analysis",
-                       setdiff(colnames(Dataset()),''), setdiff(colnames(Dataset()),''))
+    checkboxGroupInput("xAttr", "Select only numeric variables to be used in segmentation analysis",
+                       colnames(Dataset()), colnames(Dataset()) )
     
   })
   
@@ -57,9 +47,62 @@ shinyServer(function(input, output){
     return(mydata)
   })
   
+  out = reactive({
+    data = Dataset()
+    Missing=data[!complete.cases(data),]
+    Dimensions = dim(data)
+    Head = head(data)
+    Tail = tail(data)
+    Class = NULL
+    for (i in 1:ncol(data)){
+      c1 = class(data[,i])
+      Class = c(Class, c1)
+    }
+    
+    nu = which(Class %in% c("numeric","integer"))
+    fa = which(Class %in% c("factor","character"))
+    nu.data = data[,nu] 
+    fa.data = data[,fa] 
+    Summary = list(Numeric.data = round(stat.desc(nu.data)[c(4,5,6,8,9,12,13),] ,4), factor.data = describe(fa.data))
+    # Summary = list(Numeric.data = round(stat.desc(nu.data)[c(4,5,6,8,9,12,13),] ,4), factor.data = describe(fa.data))
+
+    out = list(Dimensions = Dimensions, Summary =Summary ,Tail=Tail, Head=Head, MissingDataRows=Missing)
+    return(out)
+  })
+  
+  output$head = renderPrint({
+    if (is.null(input$file)) {return(NULL)}
+    else {
+      out()[4]
+    }
+  })
+  
+  output$tail = renderPrint({
+    if (is.null(input$file)) {return(NULL)}
+    else {
+      out()[3]
+    }
+  })
+  
+  output$missing = renderPrint({
+    if (is.null(input$file)) {return(NULL)}
+    else {
+      out()[5]
+    }
+  })
+  
+  output$summ = renderPrint({
+    if (is.null(input$file)) {return(NULL)}
+    else {
+      out()[1:2]
+    }
+  })
+  
+  
+  
   t0 = reactive({
     set.seed(12345)
-    if (input$select == ""){} else {
+    if (input$select == "."){} else {
       if (input$select == "K-Means") ({
       
       if (is.null(input$file)) {
@@ -69,9 +112,12 @@ shinyServer(function(input, output){
       
       else {
         fit = kmeans(Dataset2(),input$Clust)
-        Segment.Membership =  fit$cluster
-        d = data.frame(r.name = row.names(Dataset1()),Segment.Membership,Dataset2())
-        return(d)
+        Segment =  fit$cluster
+        d = data.frame(r.name = row.names(Dataset1()),Segment,Dataset1())
+        Cluster.Membership = as.character(fit$cluster)
+        clustmeans = aggregate(Dataset1(),by = list(Cluster.Membership), FUN = mean)
+        Summary = list(d, Cluster.Membership = Cluster.Membership, Cluster.Means =clustmeans, Count = table(Cluster.Membership) )
+        return(Summary)
       }
     })
     
@@ -82,95 +128,32 @@ shinyServer(function(input, output){
       }
       else {
         distm <- dist(Dataset2(), method = "euclidean") # distance matrix
-        fit <- hclust(distm, method="ward") 
-        Segment.Membership =  cutree(fit, k=input$Clust)
-        d = data.frame(r.name = row.names(Dataset1()),Segment.Membership,Dataset2())
-        return(d)
+        fit <- hclust(distm, method="ward.D") 
+        Segment =  cutree(fit, k=input$Clust)
+        d = data.frame(r.name = row.names(Dataset1()),Segment,Dataset1())
+        Cluster.Membership =  as.character(cutree(fit, k=input$Clust))
+        clustmeans = aggregate(Dataset1(),by = list(Cluster.Membership), FUN = mean)
+        Summary = list(d, Cluster.Membership = Cluster.Membership, Cluster.Means =clustmeans, Count = table(Cluster.Membership), ModelSumm = fit )
+        return(Summary)
       }
     })
     }
   })
     
     output$table <- renderDataTable({
-      t0()
+      t0()[[1]]
     }, options = list(lengthMenu = c(5, 30, 50,100), pageLength = 30))
     
     output$caption1 <- renderText({
-      if (input$select == "") return ("Choose cluster algorithm and click ''Apply Changes'' button")
+      if (input$select == ".") return ("choose cluster algorithm and click ''Apply Changes'' button")
       #else if (input$select == "Model Based") return ("Model Based Segmentation -  Summary")
       else if (input$select == "K-Means") return ("K-Means Segmentation -  Summary")
       else if (input$select == "Hierarchical") return ("Hierarchical Segmentation -  Summary")
       else return (NULL)
     })
     
-    output$summary1 <- renderText({
-      
-      set.seed(12345)
-      
-      if (input$select == "K-Means") ({
-        
-        if (is.null(input$file)) {
-          # User has not uploaded a file yet
-          return(data.frame())
-        }
-        else {
-          # 
-          # fit = kmeans(Dataset(),input$Clust)
-          # Segment.Membership = as.character(fit$cluster)
-          # clustmeans = aggregate(Dataset2(),by = list(Segment.Membership), FUN = mean)
-          # Summary = list(Segment.Membership = Segment.Membership, SegMeans =clustmeans, Count = table(Segment.Membership) )
-          # 
-          # 
-          Summary<-t0()[-1] %>% 
-            #mutate(Group = as.factor(Segment.Membership)) %>%
-            group_by(Segment.Membership) %>%
-            summarize_all(.funs = list(mean)) %>%
-            arrange(Segment.Membership) %>%
-            round(2)%>%
-            mutate_if(is.numeric, function(x) {
-              cell_spec(x, bold = T, 
-                        color = spec_color(x, end = 0.9),
-                        font_size = spec_font_size(x,begin = 14,end = 20))
-            }) %>%
-            kable(escape = F, align = "c") %>%
-            kable_styling(c("striped", "condensed"), full_width = F)%>%
-          footnote(general = "Mean value of all variables within each cluster. ")
-          return(Summary)
-        }
-      })  
-      else if (input$select == "Hierarchical") ({
-            if (is.null(input$file)) {
-              # User has not uploaded a file yet
-              return(data.frame())
-            }
-            else {
-              # d <- dist(Dataset(), method = "euclidean") # distance matrix
-              # fit <- hclust(d, method="ward")
-              # Segment.Membership =  as.character(cutree(fit, k=input$Clust))
-              # clustmeans = aggregate(Dataset2(),by = list(Segment.Membership), FUN = mean)
-              # Summary = list(Segment.Membership = Segment.Membership, SegMeans =clustmeans, Count = table(Segment.Membership), ModelSumm = fit )
-              # Summary
-              Summary<-t0()[-1] %>% 
-               # mutate(Group = as.factor(Segment.Membership)) %>%
-                group_by(Segment.Membership) %>%
-                summarize_all(.funs = list(mean)) %>%
-                arrange(Segment.Membership) %>%
-                round(2)%>%
-                mutate_if(is.numeric, function(x) {
-                  cell_spec(x, bold = T, 
-                            color = spec_color(x, end = 0.9),
-                            font_size = spec_font_size(x,begin = 14,end = 20))
-                }) %>%
-                kable(escape = F, align = "c") %>%
-                kable_styling(c("striped", "condensed"), full_width = F)%>%
-                footnote(general = "Mean value of all variables within each cluster. ")
-              return(Summary)
-            }
-          })
-    })
-    
     output$summary <- renderPrint({
-      if (input$select == ""){} else {
+      if (input$select == "."){} else {
       
       if (input$select == "K-Means") ({
         
@@ -179,10 +162,7 @@ shinyServer(function(input, output){
           return(data.frame())
         }
         else {
-          fit = kmeans(Dataset2(),input$Clust)
-          Segment.Membership = as.character(fit$cluster)
-          clustmeans = aggregate(Dataset1(),by = list(Segment.Membership), FUN = mean)
-          Summary = list(Segment.Membership = Segment.Membership, SegMeans =clustmeans, Count = table(Segment.Membership) )
+          Summary = list( t0()[2], t0()[3], t0()[4])
           Summary
         }
       })
@@ -195,10 +175,7 @@ shinyServer(function(input, output){
         }
         
         else {
-          fit = Mclust(Dataset2(),input$Clust)
-          Segment.Membership = as.character(fit$classification)
-          clustmeans = aggregate(Dataset1(),by = list(Segment.Membership), FUN = mean)
-          Summary = list(Segment.Membership = Segment.Membership, SegMeans =clustmeans,ModelSumm = summary(fit) )
+          Summary = list(t0()[2], t0()[3], t0()[4], t0()[5] )
           Summary
         }
       })
@@ -210,10 +187,10 @@ shinyServer(function(input, output){
         }
         else {
           d <- dist(Dataset2(), method = "euclidean") # distance matrix
-          fit <- hclust(d, method="ward") 
-          Segment.Membership =  as.character(cutree(fit, k=input$Clust))
-          clustmeans = aggregate(Dataset1(),by = list(Segment.Membership), FUN = mean)
-          Summary = list(Segment.Membership = Segment.Membership, SegMeans =clustmeans, Count = table(Segment.Membership), ModelSumm = fit )
+          fit <- hclust(d, method="ward.D") 
+          Cluster.Membership =  as.character(cutree(fit, k=input$Clust))
+          clustmeans = aggregate(Dataset1(),by = list(Cluster.Membership), FUN = mean)
+          Summary = list(Cluster.Membership = Cluster.Membership, Cluster.Means =clustmeans, Count = table(Cluster.Membership), ModelSumm = fit )
           Summary
         }
       })
@@ -272,7 +249,7 @@ shinyServer(function(input, output){
         }
         
         d <- dist(Dataset2(), method = "euclidean") # distance matrix
-        fit <- hclust(d, method="ward") 
+        fit <- hclust(d, method="ward.D") 
         plot(fit) # display dendogram
         groups <- cutree(fit, k=input$Clust) # cut tree into 5 clusters
         # draw dendogram with red borders around the 5 clusters

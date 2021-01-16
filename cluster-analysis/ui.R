@@ -17,7 +17,7 @@ shinyUI(fluidPage(
     htmlOutput("xvarselect"),
         
     selectInput("select", "Choose cluster algorithm", 
-                       c("K-Means","Hierarchical",""), selected = ""),
+                       c("K-Means","Hierarchical","."), selected = "."),
     
     numericInput("Clust", "Number of clusters:", 3),
     
@@ -42,12 +42,17 @@ submitButton(text = "Apply Changes", icon("refresh"))
                          p("Once csv file is uploaded successfully, by-default application will perform K-means segmentation with 3 segments. In left-side bar panel you can change the segmentation algorithm and number of segments. Click on Apply changes after making any change in the inputs. Accordingly results will be updates in all the tabs",
                            align="justify"),
                           ),
+                tabPanel("Summary Stats",h4("Data"), verbatimTextOutput("head"),verbatimTextOutput("tail"),
+                         h4("Data Summary"),verbatimTextOutput("summ"),h4("Missing Data Rows"),verbatimTextOutput("missing")),
+                
                 #tabPanel("Data",h3(textOutput("caption"),tableOutput("table"))),
                 
-                tabPanel("Summary - Cluster Analysis",h3(textOutput("caption1")), h4(div(textOutput("caption2"),style = "color:Red")),
-                           plotOutput("plotpca",height = 400, width = 500),verbatimTextOutput("summary")),
+                tabPanel("Summary - Cluster Analysis",
+                         h4("select only numerical varaibles for cluster analysis"), 
+                         plotOutput("plotpca",height = 400, width = 500),
+                         h4(textOutput("caption1")),verbatimTextOutput("summary")),
                 
-                tabPanel("Plot",h3("Cluster Plot"), plotOutput("plot",height = 700, width = 840)),
+                tabPanel("Plot",h4("Cluster Plot"), plotOutput("plot",height = 700, width = 840)),
                 tabPanel("Cluster Data",br(),
                          downloadButton('downloadData4', 'Download output file (Works only in browser)'), br(),br(),
                          dataTableOutput("table"),tags$head(tags$style("tfoot {display: table-header-group;}")))
