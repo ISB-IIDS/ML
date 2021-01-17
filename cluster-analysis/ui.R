@@ -15,15 +15,14 @@ shinyUI(fluidPage(
 
     fileInput("file", "Upload data (csv file with header) first column must be observation id"),
     htmlOutput("xvarselect"),
-        
+    htmlOutput("fxvarselect"),
+    submitButton(text = "Apply Changes", icon("refresh")),br(),    
     selectInput("select", "Choose cluster algorithm", 
                        c("K-Means","Hierarchical","."), selected = "."),
     
     numericInput("Clust", "Number of clusters:", 3),
-    
     br(),
-
-submitButton(text = "Apply Changes", icon("refresh"))
+    #submitButton(text = "Apply Changes", icon("refresh"))
   ),
   # Main:
   mainPanel( 
@@ -48,11 +47,12 @@ submitButton(text = "Apply Changes", icon("refresh"))
                 #tabPanel("Data",h3(textOutput("caption"),tableOutput("table"))),
                 
                 tabPanel("Summary - Cluster Analysis",
-                         h4("select only numerical varaibles for cluster analysis"), 
+                         h4("select only numerical varaibles for cluster analysis and click 'Apply Changes' button "),
+                         verbatimTextOutput("scldt"),
                          plotOutput("plotpca",height = 400, width = 500),
                          h4(textOutput("caption1")),verbatimTextOutput("summary")),
                 
-                tabPanel("Plot",h4("Cluster Plot"), plotOutput("plot",height = 700, width = 840)),
+                tabPanel("Plot",h4("Cluster Plot - Check Summary -Cluster Anlaysis Tab"), plotOutput("plot",height = 700, width = 840)),
                 tabPanel("Cluster Data",br(),
                          downloadButton('downloadData4', 'Download output file (Works only in browser)'), br(),br(),
                          dataTableOutput("table"),tags$head(tags$style("tfoot {display: table-header-group;}")))

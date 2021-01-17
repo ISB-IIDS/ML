@@ -6,14 +6,14 @@ if(!require("cluster")){install.packages("cluster")}
 if(!require("ggbiplot")){install.packages("ggbiplot")}
 if(!require("mclust")){install.packages("mclust")}
 if(!require("MASS")){install.packages("MASS")}
-if(!require("pastecs")){install.packages("pastecs")}
+if(!require("Hmisc")){install.packages("Hmisc")}
 
 library('shiny')
 library('cluster')
 library('ggbiplot')
 library('mclust')
 library('MASS')
-library('pastecs')# for stat.desc
+library('Hmisc')
 
 shinyServer(function(input, output){
   
@@ -31,20 +31,22 @@ shinyServer(function(input, output){
   output$xvarselect <- renderUI({
     if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
     
-    checkboxGroupInput("xAttr", "Select only numeric variables to be used in segmentation analysis",
+    checkboxGroupInput("xAttr", "Select X variables to be used in segmentation analysis",
                        colnames(Dataset()), colnames(Dataset()) )
     
-  })
-  
-  Dataset2 = reactive({
-    mydata = Dataset()[,c(input$xAttr)]
-    mydata1 = as.data.frame(scale(mydata, center = T, scale = T))
-    return(mydata1)
   })
   
   Dataset1 = reactive({
     mydata = Dataset()[,c(input$xAttr)]
     return(mydata)
+  })
+  
+  Dataset2 = reactive({
+    x0 = Dataset()[,c(input$xAttr)]
+    x01 = scale(x0, center = T, scale = T)
+    dstd = data.frame(x01)
+    #colnames(dstd) = c(colnames(x01))
+    return(dstd)
   })
   
   out = reactive({
@@ -66,7 +68,7 @@ shinyServer(function(input, output){
     Summary = list(Numeric.data = round(stat.desc(nu.data)[c(4,5,6,8,9,12,13),] ,4), factor.data = describe(fa.data))
     # Summary = list(Numeric.data = round(stat.desc(nu.data)[c(4,5,6,8,9,12,13),] ,4), factor.data = describe(fa.data))
 
-    out = list(Dimensions = Dimensions, Summary =Summary ,Tail=Tail, Head=Head, MissingDataRows=Missing)
+    out = list(Dimensions = Dimensions, Summary =Summary ,Tail=Tail, Head=Head, MissingDataRows=Missing, num.data=nu.data, factr.data=fa.data)
     return(out)
   })
   
@@ -76,6 +78,16 @@ shinyServer(function(input, output){
       out()[4]
     }
   })
+  
+  output$scldt = renderPrint({
+    if (is.null(input$file)) {return(NULL)}
+    else {
+      dt=Dataset2()
+      list(Note="data is 'mean-centered' and 'scaled' for cluster analysis", dtt=head(dt))
+    }
+    
+  })
+  
   
   output$tail = renderPrint({
     if (is.null(input$file)) {return(NULL)}
