@@ -2,7 +2,7 @@
 #      Summary & OLS App                      #
 #################################################
 if(!require("shiny")) {install.packages("shiny")}
-if(!require("pastecs")){install.packages("pastecs")}
+if(!require("pastecs")){install.packages("pastecs")} #for stat.desc
 if(!require("RColorBrewer")){install.packages("RColorBrewer")}
 if(!require("Hmisc")){install.packages("Hmisc")}
 if(!require("ggplot2")){install.packages("ggplot2")}

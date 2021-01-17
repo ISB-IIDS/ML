@@ -7,6 +7,7 @@ if(!require("ggbiplot")){install.packages("ggbiplot")}
 if(!require("mclust")){install.packages("mclust")}
 if(!require("MASS")){install.packages("MASS")}
 if(!require("Hmisc")){install.packages("Hmisc")}
+if(!require("pastecs")){install.packages("pastecs")}
 
 library('shiny')
 library('cluster')
@@ -14,6 +15,7 @@ library('ggbiplot')
 library('mclust')
 library('MASS')
 library('Hmisc')
+library('pastecs')
 
 shinyServer(function(input, output){
   
@@ -41,16 +43,8 @@ shinyServer(function(input, output){
     return(mydata)
   })
   
-  Dataset2 = reactive({
-    x0 = Dataset()[,c(input$xAttr)]
-    x01 = scale(x0, center = T, scale = T)
-    dstd = data.frame(x01)
-    #colnames(dstd) = c(colnames(x01))
-    return(dstd)
-  })
-  
   out = reactive({
-    data = Dataset()
+    data = Dataset1()
     Missing=data[!complete.cases(data),]
     Dimensions = dim(data)
     Head = head(data)
@@ -70,6 +64,14 @@ shinyServer(function(input, output){
 
     out = list(Dimensions = Dimensions, Summary =Summary ,Tail=Tail, Head=Head, MissingDataRows=Missing, num.data=nu.data, factr.data=fa.data)
     return(out)
+  })
+  
+  Dataset2 = reactive({
+    x0 = Dataset1()
+    x01 = scale(x0, center = T, scale = T)
+    dstd = data.frame(x01)
+    #colnames(dstd) = c(colnames(x01))
+    return(dstd)
   })
   
   output$head = renderPrint({
