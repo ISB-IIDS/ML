@@ -5,10 +5,6 @@ if(!require("RColorBrewer")){install.packages("RColorBrewer")}
 if(!require("Hmisc")){install.packages("Hmisc")}
 if(!require("ggplot2")){install.packages("ggplot2")}
 if(!require("reshape2")){install.packages("reshape2")}
+if (!require("corrplot")) {install.packages("corrplot")}
+if (!require("PerformanceAnalytics")) {install.packages("PerformanceAnalytics")}
 
-library(shiny)
-library(pastecs)
-library(RColorBrewer)
-library(Hmisc)
-library(ggplot2)
-library(reshape2)
