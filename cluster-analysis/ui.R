@@ -41,18 +41,18 @@ shinyUI(fluidPage(
                          p("Once csv file is uploaded successfully, by-default application will perform K-means segmentation with 3 segments. In left-side bar panel you can change the segmentation algorithm and number of segments. Click on Apply changes after making any change in the inputs. Accordingly results will be updates in all the tabs",
                            align="justify"),
                           ),
-                tabPanel("Summary Stats",h4("Data"), verbatimTextOutput("head"),verbatimTextOutput("tail"),
+                tabPanel("Summary Stats",h4("Data Summary - select X variables and click 'Apply Changes' "), verbatimTextOutput("head"),verbatimTextOutput("tail"),
                          h4("Data Summary"),verbatimTextOutput("summ"),h4("Missing Data Rows"),verbatimTextOutput("missing")),
                 
                 #tabPanel("Data",h3(textOutput("caption"),tableOutput("table"))),
                 
                 tabPanel("Summary - Cluster Analysis",
-                         h4("select only numerical varaibles for cluster analysis and click 'Apply Changes' button "),
+                         h4("check summary stats and select only numerical varaibles in X for cluster analysis and click 'Apply Changes'  "),
                          verbatimTextOutput("scldt"),
                          plotOutput("plotpca",height = 400, width = 500),
                          h4(textOutput("caption1")),verbatimTextOutput("summary")),
                 
-                tabPanel("Plot",h4("Cluster Plot - Check Summary -Cluster Anlaysis Tab"), plotOutput("plot",height = 700, width = 840)),
+                tabPanel("Plot",h4("Cluster Plot - choose cluster algorithm and click 'Apply Changes' "), plotOutput("plot",height = 700, width = 840)),
                 tabPanel("Cluster Data",br(),
                          downloadButton('downloadData4', 'Download output file (Works only in browser)'), br(),br(),
                          dataTableOutput("table"),tags$head(tags$style("tfoot {display: table-header-group;}")))

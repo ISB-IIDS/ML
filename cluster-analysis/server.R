@@ -159,7 +159,7 @@ shinyServer(function(input, output){
     }, options = list(lengthMenu = c(5, 30, 50,100), pageLength = 30))
     
     output$caption1 <- renderText({
-      if (input$select == ".") return ("choose cluster algorithm and click ''Apply Changes'' button")
+      if (input$select == ".") return ("choose cluster algorithm and click ''Apply Changes'' ")
       #else if (input$select == "Model Based") return ("Model Based Segmentation -  Summary")
       else if (input$select == "K-Means") return ("K-Means Segmentation -  Summary")
       else if (input$select == "Hierarchical") return ("Hierarchical Segmentation -  Summary")
