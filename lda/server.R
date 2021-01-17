@@ -1,5 +1,5 @@
 #################################################
-#      Summary & GLM App                      #
+#      Linear Discriminant Analysis App                      #
 #################################################
 if(!require("shiny")) {install.packages("shiny")}
 if(!require("pastecs")){install.packages("pastecs")}
@@ -11,6 +11,7 @@ if (!require("corrplot")) {install.packages("corrplot")}
 if (!require("ROCR")) {install.packages("ROCR")}
 if (!require("caret")) {install.packages("caret")}
 if (!require("Rfast")) {install.packages("Rfast")}
+if (!require("MASS")) {install.packages("MASS")}
 
 library(shiny)
 library(pastecs)
@@ -22,6 +23,7 @@ library(corrplot)
 library(ROCR)
 library(caret)
 library(Rfast)
+library(MASS)
 
 # library(gplot)
 
@@ -75,7 +77,7 @@ output$fxvarselect <- renderUI({
 
 mydata = reactive({
   mydata = Dataset()[,c(input$yAttr,input$xAttr)]
-
+ # mydata[,input$yAttr] = as.factor(mydata[,input$yAttr])
   if (length(input$fxAttr) >= 1){
   for (j in 1:length(input$fxAttr)){
       mydata[,input$fxAttr[j]] = factor(mydata[,input$fxAttr[j]])
@@ -169,10 +171,10 @@ plot_data = reactive({
 
 ols = reactive({
     rhs = paste(input$xAttr, collapse = "+")
-    ols = glm(paste(input$yAttr,"~", rhs , sep=""), data = mydata(), family=binomial)
+    formula=as.formula(paste(input$yAttr,"~", rhs , sep=""))
+    ols = lda(formula, data = mydata())
   return(ols)
 })
-
 
 
 output$olssummary = renderPrint({
@@ -187,16 +189,17 @@ output$datatable = renderTable({
   else {
   Y.Prob = ols()$fitted.values
   data.frame(Y.Prob,mydata())
+  
   }
-}, options = list(lengthMenu = c(10, 20, 50), pageLength = 10)  )
+})
 
-inputpredicted = reactive({
-  val = predict(ols(),Dataset(), type='response')
+inputprediction = reactive({
+  val = predict(ols(),Dataset())
   out = data.frame(Y.Prob = val, Dataset())
 })
 
 predicted = reactive({
-  val = predict(ols(),Dataset.Predict(), type='response')
+  val = predict(ols(),Dataset.Predict())
   out = data.frame(Y.Prob = val, pred.readdata())
 })
 
@@ -220,6 +223,8 @@ output$confusionmatrix = renderPrint({
 })
 
 
+
+
 output$roc = renderPlot({ 
   if (is.null(input$file)) {return(NULL)}
   else {
@@ -238,11 +243,6 @@ output$roc = renderPlot({
 output$prediction =  renderPrint({
   if (is.null(input$filep)) {return(NULL)}
   head(predicted(),10)
-})
-
-output$inputprediction =  renderPrint({
-  if (is.null(input$file)) {return(NULL)}
-  head(inputpredicted(),10)
 })
 
 #------------------------------------------------#

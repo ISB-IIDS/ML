@@ -1,5 +1,5 @@
 ####################################################
-#      Summary & GLM App                           #
+#      Linear Discriminant Analysis App                           #
 ####################################################
 
 library("shiny")
@@ -7,8 +7,8 @@ library("shiny")
 
 shinyUI(pageWithSidebar(
   # Header:
-  #headerPanel("Logistic Regression (Binary Logit) App"),
-  headerPanel(title=div(img(src="isb.png",align = "right"), h2("Logistic Regression (Binary Logit) App", style="bold"))),
+  #headerPanel("Linear Discriminant Analysis App"),
+  headerPanel(title=div(img(src="isb.png",align = "right"), h2("Linear Discriminant Analysis App", style="bold"))),
   # Input in sidepanel:
   sidebarPanel(
 
@@ -48,13 +48,12 @@ shinyUI(pageWithSidebar(
                          ),
                 tabPanel("Data Summary",h4("Data"), verbatimTextOutput("head"),verbatimTextOutput("tail"),
                          h4("Data Summary"),verbatimTextOutput("summary"),h4("Missing Data Rows"),verbatimTextOutput("missing")),
-                tabPanel("Summary Logit", h4("Summary Logit Model"),verbatimTextOutput("olssummary"),
+                tabPanel("Summary LDA", h4("Summary LDA Model"),verbatimTextOutput("olssummary"),
                               h4('Confusion Matrix'), verbatimTextOutput("validation")),
                          #h4("Summary OLS standardized model"), verbatimTextOutput("olssummarystd")),
                 tabPanel("Data with predicted Y", h4("Download Input Data with Predicted Probability of Y=1"),
                          downloadButton('downloadData2', 'Download Data (Works only in browser)'),
-                         br(),br(),tableOutput("datatable") #verbatimTextOutput('inputprediction')
-                         ),
+                         br(),br(),tableOutput("datatable")),
                # tabPanel("Correlation",h4("Correlation Table - Input data"), verbatimTextOutput("correlation"),
                #          h4("Correlation Visulization - Input Data"),plotOutput("corplot")),
                 tabPanel("ROC", 
