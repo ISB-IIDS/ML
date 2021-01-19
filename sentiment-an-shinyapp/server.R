@@ -122,9 +122,10 @@ lexicon_data<-read.csv('sentiments.csv',stringsAsFactors=FALSE)# read lexcicons 
     
     if (input$lexicon %in% c("AFINN","userdefined")) {
       out = list(sentiments_cdf())
-    } else if (input$lexicon == "nrc") {
-      out = list(dat3,dat4,dat1)
-    } else if (input$lexicon == "bing") {
+    } #else if (input$lexicon == "nrc") {
+      #out = list(dat3,dat4,dat1)
+   # }
+    else if (input$lexicon == "bing") {
       out = list(dat1)
     } else if (input$lexicon == "loughran") {
       out = list(dat2,dat1)
@@ -138,9 +139,11 @@ lexicon_data<-read.csv('sentiments.csv',stringsAsFactors=FALSE)# read lexcicons 
       
       if (input$lexicon %in% c("AFINN","userdefined")) {
         k = 1
-      } else if (input$lexicon == "nrc") {
-        k = 3
-      } else if (input$lexicon == "bing") {
+      } 
+        # else if (input$lexicon == "nrc") {
+        # k = 3
+        # } 
+      else if (input$lexicon == "bing") {
         k = 1
       } else if (input$lexicon == "loughran") {
         k = 2
@@ -198,7 +201,7 @@ lexicon_data<-read.csv('sentiments.csv',stringsAsFactors=FALSE)# read lexcicons 
     if (is.null(input$file)) {return(NULL)}
     else {
     
-    if (input$lexicon  %in% c("nrc","bing","loughran")) {
+    if (input$lexicon  %in% c("bing","loughran")) {
       sent.df() %>%
       count(word, sentiment, sort = TRUE) %>%
       acast(word ~ sentiment, value.var = "n", fill = 0) %>%
@@ -226,7 +229,7 @@ lexicon_data<-read.csv('sentiments.csv',stringsAsFactors=FALSE)# read lexcicons 
       
     # textdf = dataset()
     
-    if (input$lexicon %in% c("nrc","bing","loughran")) {
+    if (input$lexicon %in% c("bing","loughran")) {
         wc = sent.df() %>%
         count(word, sentiment, sort = TRUE) %>%
         acast(word ~ sentiment, value.var = "n", fill = 0) 
@@ -261,16 +264,16 @@ lexicon_data<-read.csv('sentiments.csv',stringsAsFactors=FALSE)# read lexcicons 
     # return(tidy.sentiment(dataset(), lexicon = input$lexicon))
     textdf = dataset()[input$index,] %>% unnest_tokens(text, text, token = "sentences")
   
-    if (input$lexicon == "nrc") {
-        sent = textdf %>%
-        mutate(linenumber = row_number()) %>%
-        ungroup() %>%
-        unnest_tokens(word, text) %>%
-        anti_join(stopw(), by="word") %>%
-        inner_join(lexicon_data%>%filter(lexicon=='nrc')) %>% #----changes required--#
-        count(sentiment, Sentence.No = linenumber %/% 1, sort = TRUE) %>%
-        mutate(method = "nrc")
-    }
+    # if (input$lexicon == "nrc") {
+    #     sent = textdf %>%
+    #     mutate(linenumber = row_number()) %>%
+    #     ungroup() %>%
+    #     unnest_tokens(word, text) %>%
+    #     anti_join(stopw(), by="word") %>%
+    #     inner_join(lexicon_data%>%filter(lexicon=='nrc')) %>% #----changes required--#
+    #     count(sentiment, Sentence.No = linenumber %/% 1, sort = TRUE) %>%
+    #     mutate(method = "nrc")
+    # }
     
     if (input$lexicon == "bing") {
       sent = textdf %>%
@@ -366,7 +369,7 @@ lexicon_data<-read.csv('sentiments.csv',stringsAsFactors=FALSE)# read lexcicons 
       
       worddf = data.frame(worddf)
       
-      if (input$lexicon %in%  c("nrc","bing","loughran")) {
+      if (input$lexicon %in%  c("bing","loughran")) {
         wdf = data.frame(NULL)
         for (i in unique(worddf$linenumber)) {
           tempd = worddf[worddf$linenumber == i,]

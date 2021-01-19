@@ -26,7 +26,7 @@ shinyUI(fluidPage(
     fileInput("file", "Upload text file"),  
     
     selectInput("lexicon", "Sentiment Dictionary",
-    c("AFINN","bing","nrc","loughran","User Defined"="userdefined"), selected = "AFINN"),
+    c("AFINN","bing","loughran","User Defined"="userdefined"), selected = "AFINN"),
     
     uiOutput("dictionary"),
     textInput("stopw", ("Enter stop words separated by comma(,)"), value = "will,can"),
@@ -55,10 +55,10 @@ shinyUI(fluidPage(
                          a(href="https://www.cs.uic.edu/~liub/FBS/sentiment-analysis.html","2- Bing"),
                          p("This sentiment dictionary is created by Bing Liu and collaborators. In this dictionary, words are classified as positive or negative."),
                       
-                         a(href="http://saifmohammad.com/WebPages/NRC-Emotion-Lexicon.htm","3- NRC"),
-                         p("The NRC Emotion Lexicon is a list of English words and their associations with eight basic emotions (anger, fear, anticipation, trust, surprise, sadness, joy, and disgust) and two sentiments (negative and positive). The annotations were manually done by crowdsourcing."),
+                         #a(href="http://saifmohammad.com/WebPages/NRC-Emotion-Lexicon.htm","3- NRC"),
+                         #p("The NRC Emotion Lexicon is a list of English words and their associations with eight basic emotions (anger, fear, anticipation, trust, surprise, sadness, joy, and disgust) and two sentiments (negative and positive). The annotations were manually done by crowdsourcing."),
                       
-                         a(href="http://www3.nd.edu/~mcdonald/Word_Lists.html","4- Loughran"),
+                         a(href="http://www3.nd.edu/~mcdonald/Word_Lists.html","3- Loughran"),
                          p("This dictionary is created by Tim Loughran and Bill McDonald. In this dictionary each word is classified in financial context (uncertainty, litigious, constraining, superfluous, positive, negative)"),
                         
                          h4(p("Download Sample user defined dictionary file")),
