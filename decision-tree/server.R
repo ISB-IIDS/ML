@@ -138,10 +138,9 @@ shinyServer(function(input, output,session) {
     }
   })
  
-  chheight = reactive({
-    chh=input$height
-    return(chh)
-    }) 
+  chheight = renderPrint({
+    input$height
+      }) 
   
   testsample =  reactive({
   set.seed(5898)
