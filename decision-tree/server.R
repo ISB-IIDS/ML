@@ -137,7 +137,11 @@ shinyServer(function(input, output,session) {
       out()[9]
     }
   })
-  
+ 
+  chheight = reactive({
+    chh=input$height
+    return(chh)
+    }) 
   
   testsample =  reactive({
   set.seed(5898)
