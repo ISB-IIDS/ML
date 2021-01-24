@@ -19,6 +19,7 @@ shinyUI(pageWithSidebar(
     h5(p("Data Selection")),
     htmlOutput("yvarselect"),
     htmlOutput("xvarselect"),
+    submitButton(text = "Apply Changes", icon("refresh")),br(),
     htmlOutput("fxvarselect"),
     br()
   ),

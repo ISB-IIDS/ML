@@ -20,6 +20,7 @@ shinyUI(
         fileInput("filep", "Upload new data for prediction (csv file)"),
         htmlOutput("yvarselect"),
         htmlOutput("xvarselect"),
+        submitButton(text = "Apply Changes", icon("refresh")),br(),
         htmlOutput("fxvarselect")
       ),   # end of sidebar panel
       
@@ -69,6 +70,7 @@ shinyUI(
                              ),
                     tabPanel('Detailed summary of splits',verbatimTextOutput("summary")),
                     tabPanel("Decision Tree",
+                             #h4('smallest optimal cp'),verbatimTextOutput("cpselect"),
                              # h4('Regression Tree'),
                              #sliderInput('height','chart height',500,5000,1100),
                              plotOutput("plot3",height = 1600),

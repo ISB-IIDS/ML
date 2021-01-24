@@ -63,7 +63,7 @@ shinyServer(function(input, output,session) {
     if (identical(readdata.temp(), '') || identical(readdata.temp(),data.frame())) return(NULL)
     
     checkboxGroupInput("fxAttr", "Select factor (categorical) variables",
-                       colnames(readdata.temp()),input$yAttr )
+                       colnames(readdata.temp()),"" )
     
   })
   
@@ -208,7 +208,7 @@ shinyServer(function(input, output,session) {
   if (class(train_data()[,c(input$yAttr)]) == "factor"){
   fit.rt <- rpart(as.formula(paste(y, paste( x, collapse = ' + '), sep=" ~ ")),
                   cp = input$cp,
-                  method="class",   # use "class" for classification trees
+                  #method="class",   # use "class" for classification trees
                 data=train_data())
   pr <- as.party(fit.rt)    # thus, we use same object 'rp' from the raprt package
   val1 = predict(pr, newdata = test_data(),type="response")
@@ -218,7 +218,7 @@ shinyServer(function(input, output,session) {
   } else {
   fit.rt <- rpart(as.formula(paste(y, paste( x, collapse = ' + '), sep=" ~ ")),
                   cp = input$cp,
-                  method="anova",   # use "class" for classification trees
+                #  method="anova",   # use "class" for classification trees
                   data=train_data())
   pr <- as.party(fit.rt)    # thus, we use same object 'rp' from the raprt package
    val1 = predict(pr, newdata = test_data())
@@ -226,7 +226,7 @@ shinyServer(function(input, output,session) {
    imp = round(fit.rt$variable.importance/sum(fit.rt$variable.importance),2)
   }
   
-  out = list(model = fit.rt, validation = val, imp = imp, validation1=val1)
+  out = list(model = fit.rt, validation = val, imp = imp, validation1=val1, cptable=fit.rt$cptable)
     })
   
 #-------------------------------------
@@ -271,6 +271,16 @@ shinyServer(function(input, output,session) {
     
   })
 #---------------------------------------------------------------  
+  
+  output$cpselect = renderPrint({
+      bigtree <- fit.rt()$cptable
+      min.x <- which.min(bigtree[, 4]) #column 4 is xerror
+      msl=bigtree[min.x, 4] + bigtree[min.x, 5]
+      optcp=bigtree[min.x,1]
+      kk=nrow(bigtree)
+      #for(i in 1:kk) { if (bigtree[i, 4] < msl) {optcp=bigtree[i,1]}  }
+      return(optcp) #column 5: xstd, column 1: cp
+  })
   
 
   output$validation1 = renderPrint({
@@ -363,7 +373,7 @@ shinyServer(function(input, output,session) {
   output$plot3 = renderPlot({
     if (is.null(input$file)) {return(NULL)}
     
-    title1 = paste("decision tree of", input$yAttr, "in test data")
+    title1 = paste("decision tree of", input$yAttr, "(test data)")
     
   post((fit.rt()$model), 
        # file = "tree2.ps", 

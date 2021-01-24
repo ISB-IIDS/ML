@@ -22,8 +22,9 @@ shinyUI(pageWithSidebar(
     htmlOutput("Choicevarselect"),
     htmlOutput("Individualvarselect"),
     htmlOutput("Alternativesvarselect"),
+    submitButton(text = "Apply Changes", icon("refresh")),br(),
     htmlOutput("Alternativefeaturesvarselect"),
-    htmlOutput("Individualfeaturesvarselect"),
+        htmlOutput("Individualfeaturesvarselect"),
     fileInput("filep", "Upload new data for prediction (csv file with header)"),
     br()
   ),
