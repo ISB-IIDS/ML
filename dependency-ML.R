@@ -35,6 +35,7 @@ try(require("dplyr")||install.packages("dplyr"))
 try(require("Hmisc")||install.packages("Hmisc"))
 try(require("party")||install.packages("party"))
 try(require("partykit")||install.packages("partykit"))
+try(require("fmsb")||install.packages("fmsb"))
 
 if(!require("maptpx")) {install.packages("maptpx")}
 if(!require("nFactors")) {install.packages("nFactors")}

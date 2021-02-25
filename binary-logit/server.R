@@ -47,30 +47,46 @@ pred.readdata <- reactive({
 # Select variables:
 output$yvarselect <- renderUI({
   if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
-  
+  if (is.null(input$file)) {return(NULL)}
+  else {
   selectInput("yAttr", "Select Y variable (must be binary 0/1 variable)",
                      colnames(Dataset()), colnames(Dataset())[1])
-  
+  }
 })
 
 output$xvarselect <- renderUI({
   if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
-  
+  if (is.null(input$file)) {return(NULL)}
+  else {
   checkboxGroupInput("xAttr", "Select X variables",
                      setdiff(colnames(Dataset()),input$yAttr), setdiff(colnames(Dataset()),input$yAttr))
-  
+  }
 })
 
 Dataset.temp = reactive({
   mydata = Dataset()[,c(input$yAttr,input$xAttr)]
 })
 
+nu.Dataset = reactive({
+  data = Dataset.temp()
+  Class = NULL
+  for (i in 1:ncol(data)){
+    c1 = class(data[,i])
+    Class = c(Class, c1)
+  }
+  nu = which(Class %in% c("numeric","integer"))
+  nu.data = data[,nu] 
+  return(nu.data)
+})
+
 output$fxvarselect <- renderUI({
   if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
-  
+  if (is.null(input$file)) {return(NULL)}
+  else {
   checkboxGroupInput("fxAttr", "Select factor (categorical) variables in X",
-                     setdiff(colnames(Dataset.temp()),input$yAttr),"" )
-  
+                #     setdiff(colnames(Dataset.temp()),input$yAttr),"" )
+                setdiff(colnames(Dataset.temp()),input$yAttr),setdiff(colnames(Dataset.temp()),c(input$yAttr,colnames(nu.Dataset()))) )
+  }
 })
 
 mydata = reactive({

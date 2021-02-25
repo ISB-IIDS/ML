@@ -40,31 +40,48 @@ shinyServer(function(input, output,session) {
   # Select variables:
   output$yvarselect <- renderUI({
     if (is.null(input$file)) {return(NULL)}
-    
+    if (is.null(input$file)) {return(NULL)}
+    else {
     selectInput("yAttr", "Select Y variable (Is it is a categorical variable? mark it as factor variable)",
                 colnames(readdata()), colnames(readdata())[1])
-    
+    }
   })
   
   output$xvarselect <- renderUI({
     if (identical(readdata(), '') || identical(readdata(),data.frame())) return(NULL)
-    
+    if (is.null(input$file)) {return(NULL)}
+    else {
     checkboxGroupInput("xAttr", "Select X variables",
                        setdiff(colnames(readdata()),input$yAttr), setdiff(colnames(readdata()),input$yAttr))
-    
-  })
+        }
+      })
 
   readdata.temp = reactive({
     mydata = readdata()[,c(input$yAttr,input$xAttr)]
   })
 
+  nu.Dataset = reactive({
+    data = readdata.temp()
+    Class = NULL
+    for (i in 1:ncol(data)){
+      c1 = class(data[,i])
+      Class = c(Class, c1)
+    }
+    nu = which(Class %in% c("numeric","integer"))
+    nu.data = data[,nu] 
+    return(nu.data)
+  })  
+  
     
   output$fxvarselect <- renderUI({
     if (identical(readdata.temp(), '') || identical(readdata.temp(),data.frame())) return(NULL)
-    
+    if (is.null(input$file)) {return(NULL)}
+    else {
     checkboxGroupInput("fxAttr", "Select factor (categorical) variables",
-                       colnames(readdata.temp()),"" )
-    
+                     #  colnames(readdata.temp()),"" )
+                        colnames(readdata.temp()),setdiff(colnames(readdata.temp()),c(colnames(nu.Dataset()))) )
+                    #  setdiff(colnames(Dataset.temp()),input$yAttr),setdiff(colnames(Dataset.temp()),c(input$yAttr,colnames(nu.Dataset()))) )
+    }
   })
   
   
@@ -273,13 +290,16 @@ shinyServer(function(input, output,session) {
 #---------------------------------------------------------------  
   
   output$cpselect = renderPrint({
+    if (is.null(input$file)) {return(NULL)}
+    else {
       bigtree <- fit.rt()$cptable
       min.x <- which.min(bigtree[, 4]) #column 4 is xerror
       msl=bigtree[min.x, 4] + bigtree[min.x, 5]
-      optcp=bigtree[min.x,1]
+      ssl=bigtree[min.x, 4] - bigtree[min.x, 5]
       kk=nrow(bigtree)
       #for(i in 1:kk) { if (bigtree[i, 4] < msl) {optcp=bigtree[i,1]}  }
-      return(optcp) #column 5: xstd, column 1: cp
+      return(list(smallest_cp=ssl,largest_cp=msl)) #column 5: xstd, column 1: cp
+    }
   })
   
 
