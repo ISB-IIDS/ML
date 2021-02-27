@@ -281,7 +281,7 @@ output$downloadData2 <- downloadHandler(
   filename = function() { "Input Data With Prediction.csv" },
   content = function(file) {
     if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
-    write.csv(inputprediction(), file, row.names=F, col.names=F)
+    write.csv(inputpredicted(), file, row.names=F, col.names=F)
   }
 )
 
