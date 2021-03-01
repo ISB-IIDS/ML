@@ -50,7 +50,7 @@ fluidPage(
                             tags$b("1. Adjacency Matrix"),
                             p("It represents the relationship between the nodes & input file looks like"),
                             
-                            img(src = "input_adj.jpg", height = 180, width = 400),
+                            img(src = "input_adj.png", height = 180, width = 400),
                             tags$br(),
                            # downloadButton('downloadData', 'Download Example adjacecny matrix file'),
                             
@@ -59,7 +59,7 @@ fluidPage(
                             tags$b("2. Demographic Data"),
                             p("It represents demographic data of individual nodes & input file looks like"),
                             
-                            img(src = "input_demo.jpg", height = 180, width = 400),
+                            img(src = "input_demo.png", height = 180, width = 400),
                             tags$br(),
                             #downloadButton('downloadData2', 'Download Example demographic file'),
                             tags$br(),
