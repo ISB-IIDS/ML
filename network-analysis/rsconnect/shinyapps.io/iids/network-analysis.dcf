@@ -1,0 +1,12 @@
+name: network-analysis
+title: network-analysis
+username:
+account: iids
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3713642
+bundleId: 4284171
+url: https://isb-iids.shinyapps.io/network-analysis/
+when: 1614579308.07137
+asMultiple: FALSE
+asStatic: FALSE
