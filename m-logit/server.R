@@ -52,20 +52,21 @@ library(multiROC)
   })
   
   # Select variables:
-  output$Choicevarselect <- renderUI({
-    if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
-    
-    selectInput("ChoiceAttr", "Select choice/outcome variable",
-                colnames(Dataset()), colnames(Dataset())[1])
-    
-  })
   output$Individualvarselect <- renderUI({
     if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
     
-    selectInput("IndividualAttr", "Select observation ID variable",
-                setdiff(colnames(Dataset()),input$ChoiceAttr), setdiff(colnames(Dataset()),input$ChoiceAttr)[1])
+    selectInput("IndividualAttr", "Select observation/individual ID column",
+                colnames(Dataset()), colnames(Dataset())[1])
+    })
+  
+  output$Choicevarselect <- renderUI({
+    if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
     
+    selectInput("ChoiceAttr", "Select choice/outcome column",
+               # colnames(Dataset()), colnames(Dataset())[1])
+                setdiff(colnames(Dataset()),input$IndividualAttr), setdiff(colnames(Dataset()),input$IndividualAttr)[1])
   })
+
   
   #convert into factor variables:
   output$Alternativesvarselect <- renderUI({
@@ -80,7 +81,7 @@ library(multiROC)
   output$Alternativefeaturesvarselect <- renderUI({
     if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
     
-    checkboxGroupInput("AlternativefeaturesAttr", "Select alternatives specific variables",
+    checkboxGroupInput("AlternativefeaturesAttr", "Select alternative specific variables",
                        setdiff(colnames(Dataset()),c(input$IndividualAttr,input$AlternativesAttr,input$ChoiceAttr)),"")
     
   })
@@ -88,7 +89,7 @@ library(multiROC)
   output$Individualfeaturesvarselect <- renderUI({
     if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
 
-    checkboxGroupInput("IndividualfeaturesAttr", "Select observation specific variable",
+    checkboxGroupInput("IndividualfeaturesAttr", "Select observation/individual specific variables",
                        setdiff(colnames(Dataset()),c(input$IndividualAttr,input$AlternativefeaturesAttr,input$AlternativesAttr,input$ChoiceAttr)),"" )
 
   })

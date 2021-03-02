@@ -5,8 +5,9 @@ account: iids
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3507053
-bundleId: 4278036
+bundleId: 4285469
 url: https://isb-iids.shinyapps.io/m-logit/
-when: 1614404836.18054
+when: 1614602428.04284
 asMultiple: FALSE
 asStatic: FALSE
+ignoredFiles: www/example1.png|www/isb.png

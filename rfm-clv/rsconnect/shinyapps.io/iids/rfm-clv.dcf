@@ -1,0 +1,12 @@
+name: rfm-clv
+title: rfm-clv
+username:
+account: iids
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3719845
+bundleId: 4289005
+url: https://isb-iids.shinyapps.io/rfm-clv/
+when: 1614667064.43251
+asMultiple: FALSE
+asStatic: FALSE
