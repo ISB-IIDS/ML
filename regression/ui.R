@@ -15,12 +15,12 @@ shinyUI(pageWithSidebar(
 
     h5(p("Data Input")),
     fileInput("file", "Upload input data (csv file with header)"),
-    fileInput("filep", "Upload new data for prediction (csv file with header)"),
     h5(p("Data Selection")),
     htmlOutput("yvarselect"),
     htmlOutput("xvarselect"),
  #   submitButton(text = "Apply Changes", icon("refresh")),br(),
     htmlOutput("fxvarselect"),
+    fileInput("filep", "Upload new data for prediction (csv file with header)"),
     br()
   ),
   # Main:

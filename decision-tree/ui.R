@@ -17,11 +17,12 @@ shinyUI(
         sliderInput('sample','test sample percentage',10,40,25),
         # h4(p("Select Response Variable")),
         sliderInput('cp','complexity parameter',0,0.5,0),
-        fileInput("filep", "Upload new data for prediction (csv file)"),
+        
         htmlOutput("yvarselect"),
         htmlOutput("xvarselect"),
       #  submitButton(text = "Apply Changes", icon("refresh")),br(),
-        htmlOutput("fxvarselect")
+        htmlOutput("fxvarselect"),
+        fileInput("filep", "Upload new data for prediction (csv file)")
       ),   # end of sidebar panel
       
     mainPanel(

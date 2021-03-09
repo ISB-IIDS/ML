@@ -22,9 +22,10 @@ shinyUI(pageWithSidebar(
     htmlOutput("Individualvarselect"),
     htmlOutput("Choicevarselect"),
     htmlOutput("Alternativesvarselect"),
+
     htmlOutput("Alternativefeaturesvarselect"),
    # submitButton(text = "Apply Changes", icon("refresh")),br(),
-        htmlOutput("Individualfeaturesvarselect"),
+    htmlOutput("Individualfeaturesvarselect"),
     fileInput("filep", "Upload new data for prediction (csv file with header)"),
     br()
   ),
@@ -71,7 +72,7 @@ shinyUI(pageWithSidebar(
                 # tabPanel("Correlation", verbatimTextOutput("correlation"),plotOutput("heatmap")),
                  tabPanel("Summary Stats",h4("Data"), verbatimTextOutput("head"),verbatimTextOutput("tail"),
                          h4("Data Summary"),verbatimTextOutput("summary"),h4("Missing Data Rows"),verbatimTextOutput("missing")),
-                tabPanel("Model Output", h4("Model Summary"),verbatimTextOutput("olssummary")),
+                tabPanel("Model Output",     htmlOutput("BaseAlternativeselect")  ,h4("Model Summary"),verbatimTextOutput("olssummary")),
               #  tabPanel("Correlation",h4("Correlation Table"), verbatimTextOutput("correlation"),h4("Correlation"),plotOutput("corplot")),
                  tabPanel("Prediction Probablities", 
                           h4(p("Download output probabilities (training data)")),

@@ -26,10 +26,22 @@ library(shiny)
 
 shinyServer(function(input, output) {
   
-  output$freqDist <- renderPlot({
+  output$rfreqDist <- renderPlot({
     req(input$data)
     data <- read.csv(input$data$datapath)
-    hist(data[,2], breaks=50, main="Histogram of recency", xlab="Days since last visit", ylab="Frequency in the dataset")
+    hist(data[,2], breaks=50, main="Histogram of recency", xlab="Days since last visit" , ylab="# of observations")
+  })
+  
+  output$ffreqDist <- renderPlot({
+    req(input$data)
+    data <- read.csv(input$data$datapath)
+    hist(data[,3], breaks=20, main="Histogram of frequency", xlab="Number of orders", ylab="# of observations")
+  })
+  
+  output$mfreqDist <- renderPlot({
+    req(input$data)
+    data <- read.csv(input$data$datapath)
+    hist(data[,4], breaks=50, main="Histogram of monetary value", xlab="Total monetary value", ylab="# of observations")
   })
   
   output$scoreHist <- renderPlot({
@@ -152,6 +164,41 @@ shinyServer(function(input, output) {
     rfm_rf_plot(rfm_result)
   })
   
+  output$graph6 <- renderPlot({
+    req(input$data)
+    data <- read.csv(input$data$datapath)
+    analysis_date <- lubridate::as_date('2007-01-01', tz = 'UTC')
+    ## use rfm::rfm_table_customer() func  
+    rfm_result <- rfm_table_customer(data = data,
+                                     names(data)[1], 
+                                     names(data)[3],
+                                     names(data)[2], 
+                                     names(data)[4], 
+                                     analysis_date,
+                                     recency_bins = input$bins, 
+                                     frequency_bins = input$bins, 
+                                     monetary_bins = input$bins)    # 0.10 secs
+    # recency vs freq scatterplot
+    rfm_fm_plot(rfm_result)
+  })
+  
+  output$graph7 <- renderPlot({
+    req(input$data)
+    data <- read.csv(input$data$datapath)
+    analysis_date <- lubridate::as_date('2007-01-01', tz = 'UTC')
+    ## use rfm::rfm_table_customer() func  
+    rfm_result <- rfm_table_customer(data = data,
+                                     names(data)[1], 
+                                     names(data)[3],
+                                     names(data)[2], 
+                                     names(data)[4], 
+                                     analysis_date,
+                                     recency_bins = input$bins, 
+                                     frequency_bins = input$bins, 
+                                     monetary_bins = input$bins)    # 0.10 secs
+    # recency vs freq scatterplot
+    rfm_rm_plot(rfm_result)
+  })
   
   ####################################################################################
   ####################################################################################

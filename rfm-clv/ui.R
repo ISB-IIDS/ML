@@ -19,8 +19,9 @@ shinyUI(fluidPage(theme = "bootstrap.css",
     sidebarPanel(
       
        fileInput("data","Upload RFM data"),
+       numericInput("bins","Number of bins",5,min=3,max=7),
+       br(),
        fileInput("segmentData","Upload segment name data"),
-       numericInput("bins","Number of bins",4,min=3,max=5),
        width = 3
     ),
     
@@ -63,8 +64,11 @@ shinyUI(fluidPage(theme = "bootstrap.css",
                   tabPanel("Score metrics",
                            tags$style(type = "text/css", 
                                       "#freqDist {height: calc(100vh - 150px) !important;}"),
-                           plotOutput("freqDist"),
-                           plotOutput("scoreHist")),
+                           plotOutput("rfreqDist"),br(),
+                           plotOutput("ffreqDist"),br(),
+                           plotOutput("mfreqDist"),
+                           #plotOutput("scoreHist")
+                           ),
                   
                   tabPanel("RFM output",
                             fluidRow("",
@@ -72,18 +76,22 @@ shinyUI(fluidPage(theme = "bootstrap.css",
                                        cellWidths = c("50%","50%"),
                                        plotOutput("graph1"),
                                        plotOutput("graph4")),
-                                     plotOutput("graph2"),
-                                     plotOutput("graph3"),
-                                     plotOutput("graph5"))
+                                     br(),
+                                     plotOutput("graph2"),br(),
+                                   #  plotOutput("graph3"),br(),
+                                   plotOutput("graph5"),br(),
+                                   plotOutput("graph6"),br(),
+                                   plotOutput("graph7"),br(),
+                                   )
                            ),
                   
                   tabPanel("Segment Level Analyis",
                            fluidRow("",
                                     #downloadButton('downloadSegmentData','Download Segmention data'),
-                                    h4("Upload segment names"),
-                                    plotOutput("segment1",width = "70%"),
-                                    plotOutput("segment2",width = "70%"),
-                                    plotOutput("segment3",width = "70%")
+                                    h4("Upload segment name data file"),
+                                    plotOutput("segment1",width = "70%"),br(),
+                                    plotOutput("segment3",width = "70%"),br(),
+                                    plotOutput("segment2",width = "70%")
                                     )
                            
                           )

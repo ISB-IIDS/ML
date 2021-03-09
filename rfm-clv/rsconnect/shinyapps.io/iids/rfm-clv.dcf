@@ -5,8 +5,8 @@ account: iids
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3719845
-bundleId: 4289005
+bundleId: 4319363
 url: https://isb-iids.shinyapps.io/rfm-clv/
-when: 1614667064.43251
+when: 1615267549.14028
 asMultiple: FALSE
 asStatic: FALSE

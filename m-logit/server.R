@@ -68,12 +68,26 @@ library(multiROC)
   })
 
   
-  #convert into factor variables:
+  #select alternatives column:
   output$Alternativesvarselect <- renderUI({
     if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
    
     selectInput("AlternativesAttr", "Select avaialble alternatives column",
                        setdiff(colnames(Dataset()),c(input$IndividualAttr,input$ChoiceAttr)), setdiff(colnames(Dataset()),c(input$IndividualAttr,input$ChoiceAttr))[1])
+    
+  })
+  
+  basealt <- reactive({
+    basealt = (as.data.frame(t(as.matrix(table(Dataset()[,input$AlternativesAttr])))))
+    return(basealt)
+  })
+  
+  #select base alternative
+  output$BaseAlternativeselect <- renderUI({
+    #if (identical(base(), '') || identical(base(),data.frame())) return(NULL)
+    #y=t(as.matrix(table(Dataset()$AlternativesAttr))) 
+    selectInput("BaseAlternative", "select base alternative",
+                colnames(basealt()), colnames(basealt())[1] )
     
   })
   
@@ -118,6 +132,7 @@ library(multiROC)
     out = list(Dimensions = Dimensions,Summary =Summary ,Tail=Tail,fa.data,nu.data,a,j, Head=Head,MissingDataRows=Missing)
     return(out)
   })
+  
   output$summary = renderPrint({
     if (is.null(input$file)) {return(NULL)}
     else {
@@ -165,7 +180,12 @@ ind.features=paste(input$IndividualfeaturesAttr,collapse = "+")
          alt.features=(paste(input$AlternativefeaturesAttr,collapse = "+"))
           } else {alt.features=0}       
          rhs=paste(alt.features,"|",ind.features,sep = "")
-        }else{rhs=paste(input$AlternativefeaturesAttr,collapse = "+")}
+      }else{
+          #rhs=paste(input$AlternativefeaturesAttr,collapse = "+")
+        if (length(input$AlternativefeaturesAttr)>=1){
+          rhs=paste(input$AlternativefeaturesAttr,collapse = "+")
+        } else {rhs=paste("0 | 1",sep="")}
+          }
       
       return(rhs)
       })
@@ -179,7 +199,8 @@ ind.features=paste(input$IndividualfeaturesAttr,collapse = "+")
     #mlogit.reg = mlogit(formula=as.formula(paste(input$yAttr,"~", rhs() ,sep="")),data=mydata2())
     formula.reg=as.formula(paste(input$ChoiceAttr,"~",rhs(),sep = ""))
     #DCE_data<- mlogit.data(data=Dataset(), choice = input$ChoiceAttr, shape = "long", alt.var = input$AlternativesAttr,id.var = input$IndividualAttr) 
-    a <- mlogit(formula=formula.reg,Dataset())
+    a <- mlogit(formula=formula.reg,data=Dataset(),alt.var = input$AlternativesAttr,id.var = input$IndividualAttr,
+                choice = input$ChoiceAttr, shape = "long", reflevel=input$BaseAlternative)
 
     return(a)
   })
