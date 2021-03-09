@@ -118,7 +118,9 @@ Dataset.Predict <- reactive({
 
 out = reactive({
 data = mydata()
-Missing=data[!complete.cases(data),]
+Missing1=(data[!complete.cases(data),])
+Missing=(Missing1)
+mscount=nrow(Missing1)
 Dimensions = dim(data)
 Head = head(data)
 Tail = tail(data)
@@ -137,7 +139,7 @@ Summary = list(Numeric.data = round(stat.desc(nu.data)[c(4,5,6,8,9,12,13),] ,4),
 
 a = seq(from = 0, to=200,by = 4)
 j = length(which(a < ncol(nu.data)))
-out = list(Dimensions = Dimensions,Summary =Summary ,Tail=Tail,fa.data,nu.data,a,j, Head=Head,MissingDataRows=Missing)
+out = list(Dimensions = Dimensions,Summary =Summary ,Tail=Tail,fa.data,nu.data,a,j, Head=Head,MissingDataRows=Missing,missing.data.rows.count=mscount)
 return(out)
 })
 
@@ -191,14 +193,19 @@ ols = reactive({
   return(ols)
 })
 
-
-
 output$olssummary = renderPrint({
   if (is.null(input$file)) {return(NULL)}
   else {
   summary(ols())
   }
   })
+
+output$mscount = renderPrint({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    out()[10]
+  }
+})
 
 output$datatable = renderTable({
   if (is.null(input$file)) {return(NULL)}

@@ -105,7 +105,9 @@ shinyServer(function(input, output,session) {
   
   out = reactive({
     data = Dataset()
-    Missing=data[!complete.cases(data),]
+    Missing1=(data[!complete.cases(data),])
+    Missing=(Missing1)
+    mscount=nrow(Missing1)
     Dimensions = dim(data)
     Head = head(data)
     Tail = tail(data)
@@ -123,7 +125,7 @@ shinyServer(function(input, output,session) {
     
     a = seq(from = 0, to=200,by = 4)
     j = length(which(a < ncol(nu.data)))
-    out = list(Dimensions = Dimensions,Summary =Summary ,Tail=Tail,fa.data,nu.data,a,j, Head=Head, MissingDataRows=Missing)
+    out = list(Dimensions = Dimensions,Summary =Summary ,Tail=Tail,fa.data,nu.data,a,j, Head=Head, MissingDataRows=Missing,missing.data.rows.count=mscount)
     return(out)
   })
   
@@ -155,6 +157,13 @@ shinyServer(function(input, output,session) {
     }
   })
  
+  output$mscount = renderPrint({
+    if (is.null(input$file)) {return(NULL)}
+    else {
+      out()[10]
+    }
+  })
+  
   chheight = renderPrint({
     input$height
       }) 
@@ -393,7 +402,7 @@ shinyServer(function(input, output,session) {
   output$plot3 = renderPlot({
     if (is.null(input$file)) {return(NULL)}
     
-    title1 = paste("decision tree of", input$yAttr, "(test data)")
+    title1 = paste("decision tree for", input$yAttr, "(set higher complexity parameter to reduce tree length)")
     
   post((fit.rt()$model), 
        # file = "tree2.ps", 

@@ -110,7 +110,9 @@ library(multiROC)
 
   out = reactive({
     data = Dataset()
-    Missing=data[!complete.cases(data),]
+    Missing1=(data[!complete.cases(data),])
+    Missing=(Missing1)
+    mscount=nrow(Missing1)
     Dimensions = dim(data)
     Head = head(data)
     Tail = tail(data)
@@ -129,7 +131,7 @@ library(multiROC)
     
     a = seq(from = 0, to=200,by = 4)
     j = length(which(a < ncol(nu.data)))
-    out = list(Dimensions = Dimensions,Summary =Summary ,Tail=Tail,fa.data,nu.data,a,j, Head=Head,MissingDataRows=Missing)
+    out = list(Dimensions = Dimensions,Summary =Summary ,Tail=Tail,fa.data,nu.data,a,j, Head=Head,MissingDataRows=Missing,missing.data.rows.count=mscount)
     return(out)
   })
   
@@ -157,6 +159,13 @@ library(multiROC)
     if (is.null(input$file)) {return(NULL)}
     else {
       out()[9]
+    }
+  })
+  
+  output$mscount = renderPrint({
+    if (is.null(input$file)) {return(NULL)}
+    else {
+      out()[10]
     }
   })
   
