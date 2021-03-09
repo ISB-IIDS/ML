@@ -177,8 +177,6 @@ output$summary = renderPrint({
       }
 })
 
-
-
 # output$scatterplots <- renderUI({
 #   if (is.null(input$file)) {return(NULL)}
 #   else {
@@ -288,7 +286,8 @@ ols2 = reactive({
   x0 = out()[[5]][,-drop]
   x01 = scale(x0, center = T, scale = T)
   
-  y = out()[[5]][,drop]
+  y1 = out()[[5]][,drop]
+  y  = scale(y1,center = T, scale =T)
   
   dstd = data.frame(y,x01)
   colnames(dstd) = c(input$yAttr,colnames(x01))
@@ -303,12 +302,32 @@ ols2 = reactive({
     fdata = data.frame(out()[[4]])
     dstd = data.frame(dstd,fdata)
   }
+  Dimensions = dim(dstd)
+  Class = NULL
+  for (i in 1:ncol(dstd)){
+    c1 = class(dstd[,i])
+    Class = c(Class, c1)
+  }
+  
+  nu = which(Class %in% c("numeric","integer"))
+  fa = which(Class %in% c("factor","character"))
+  nu.data = dstd[,nu] 
+  fa.data = dstd[,fa] 
+  Summary = list(Numeric.data = round(stat.desc(nu.data)[c(4,5,6,8,9,12,13),] ,4), factor.data = describe(fa.data))
   
   rhs = paste(input$xAttr, collapse = "+")
-  ols = lm(paste(input$yAttr,"~", rhs , sep=""), data = dstd)
-  return(ols)
+  olsstd = lm(paste(input$yAttr,"~", rhs , sep=""), data = dstd)
+  ols2=list(Dimensions = Dimensions,Summary =Summary, ols=olsstd)
+  return(ols2)
 
   })
+
+output$summarystd = renderPrint({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    ols2()[1:2]
+  }
+})
 
 output$resplot1 = renderPlot({
   if (is.null(input$file)) {return(NULL)}
@@ -327,7 +346,8 @@ output$resplot2 = renderPlot({
 output$resplot3 = renderPlot({
   if (is.null(input$file)) {return(NULL)}
   else {
-  plot(mydata()[,input$yAttr],ols()$fitted.values, xlab="Actual Y", ylab="Predicted Y")# , 
+  plot(mydata()[,input$yAttr],ols()$fitted.values, xlab="Actual Y", ylab="Predicted Y")
+  abline(0,1)  
   }
 })
 
@@ -342,7 +362,7 @@ output$olssummary = renderPrint({
 output$olssummarystd = renderPrint({
   if (is.null(input$file)) {return(NULL)}
   else {
-  summary(ols2())
+  summary(ols2()[[3]])
   }
 })
 

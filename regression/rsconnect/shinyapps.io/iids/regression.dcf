@@ -5,8 +5,8 @@ account: iids
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3506911
-bundleId: 4319324
+bundleId: 4319787
 url: https://isb-iids.shinyapps.io/regression/
-when: 1615266525.1916
+when: 1615275681.68088
 asMultiple: FALSE
 asStatic: FALSE
