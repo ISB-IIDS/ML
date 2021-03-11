@@ -24,7 +24,7 @@ shinyUI(fluidPage(
   
   # Input in sidepanel:
   sidebarPanel(
-    
+    h4(p("Data Input")),
     fileInput("file", "Upload text file"),
     uiOutput('id_var'),
     uiOutput("doc_var"),

@@ -13,14 +13,14 @@ shinyUI(pageWithSidebar(
   # Input in sidepanel:
   sidebarPanel(
 
-    h5(p("Data Input")),
+    h4(p("Data Input")),
     fileInput("file", "Upload input data (csv file with header)"),
-    h5(p("Data Selection")),
+    h4(p("Data Selection")),
     htmlOutput("yvarselect"),
     htmlOutput("xvarselect"),
  #   submitButton(text = "Apply Changes", icon("refresh")),br(),
     htmlOutput("fxvarselect"),
-    fileInput("filep", "Upload new data for prediction (csv file with header)"),
+#   fileInput("filep", "Upload new data for prediction (csv file with header)"),
     br()
   ),
   # Main:
@@ -53,12 +53,17 @@ shinyUI(pageWithSidebar(
                           verbatimTextOutput("missing")),
                 tabPanel("Correlation",h4("Correlation Table - Input data"), verbatimTextOutput("correlation"),
                          h4("Correlation Visulization - Input Data"),plotOutput("corplot")),
-                tabPanel("Summary OLS",h4("Summary OLS Model"),verbatimTextOutput("olssummary"),
-                         h4('Mean Square Error'),verbatimTextOutput("validation"),verbatimTextOutput("mscount")),
+                tabPanel("Summary OLS", verbatimTextOutput("mscount"), 
+                         h4("Summary OLS Model"),verbatimTextOutput("olssummary"),
+                         h4('Mean Square Error'),verbatimTextOutput("validation")),
                 tabPanel("Summary Standardized OLS", h4("Summary Standardized Input Data (mean=0 var=1)"),verbatimTextOutput("summarystd"),
                          h4("OLS Standardized Input Data"), verbatimTextOutput("olssummarystd")),
-                tabPanel("Input Data with Predictions", h4("Download Input Data with Predicted Y"),
-                         downloadButton('downloadData2', 'Download Data (Works only in browser)'),
+                tabPanel("Input Data with Predictions", 
+                         h4("First 10 rows of predictions for input data"),
+                         p('"Yhat" column is the predicted value.'),
+                         verbatimTextOutput('inputprediction'),
+                         h4("download input data with predicted Y"),
+                         downloadButton('downloadData2', 'download predictions for input data'),
                          br(),br(),tableOutput("datatable")),
                 # tabPanel("Corr-Hist",h4("Discriptive Analytics - Random 100 Input Data Rows"),plotOutput("heatmap1")),
                 tabPanel("Residuals Plot",
@@ -66,11 +71,13 @@ shinyUI(pageWithSidebar(
                          h4("Fitted Values vs Residuals - Input Data"), plotOutput("resplot2",height = 800),
                          h4("Residuals plot - Input Data"), plotOutput("resplot1",height = 800)),
                 tabPanel("Prediction New Data",br(),
+                         h4("Upload data for prediction should be in the same format as input data (csv file with header) "),
+                         fileInput("filep", ""),
                          h4("First 10 rows of predictions for new data (upload prediction data)"),
                          p('"Yhat" column is the predicted value.'),
                          verbatimTextOutput('prediction'),
-                         h4("Download new data with predictions"),
-                         downloadButton('downloadData1', 'Download predictions (Works only in browser)')      ) 
+                         h4("download new data with predictions"),
+                         downloadButton('downloadData1', 'download predictions for new data')      ) 
                 )
       ) 
     ) 

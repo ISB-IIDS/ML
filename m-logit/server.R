@@ -54,58 +54,70 @@ library(multiROC)
   # Select variables:
   output$Individualvarselect <- renderUI({
     if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
-    
+    if (is.null(input$file)) { return(NULL) }
+    else{
     selectInput("IndividualAttr", "Select observation/individual ID column",
                 colnames(Dataset()), colnames(Dataset())[1])
+    }
     })
   
   output$Choicevarselect <- renderUI({
     if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
-    
+    if (is.null(input$file)) { return(NULL) }
+    else{
     selectInput("ChoiceAttr", "Select choice/outcome column",
                # colnames(Dataset()), colnames(Dataset())[1])
                 setdiff(colnames(Dataset()),input$IndividualAttr), setdiff(colnames(Dataset()),input$IndividualAttr)[1])
-  })
+    }
+      })
 
   
   #select alternatives column:
   output$Alternativesvarselect <- renderUI({
     if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
-   
+    if (is.null(input$file)) { return(NULL) }
+    else{
     selectInput("AlternativesAttr", "Select avaialble alternatives column",
                        setdiff(colnames(Dataset()),c(input$IndividualAttr,input$ChoiceAttr)), setdiff(colnames(Dataset()),c(input$IndividualAttr,input$ChoiceAttr))[1])
-    
+    }
   })
   
   basealt <- reactive({
+    if (is.null(input$file)) { return(NULL) }
+    else{
     basealt = (as.data.frame(t(as.matrix(table(Dataset()[,input$AlternativesAttr])))))
+    }
     return(basealt)
   })
   
   #select base alternative
   output$BaseAlternativeselect <- renderUI({
+    if (is.null(input$file)) { return(NULL) }
+    else{
     #if (identical(base(), '') || identical(base(),data.frame())) return(NULL)
     #y=t(as.matrix(table(Dataset()$AlternativesAttr))) 
     selectInput("BaseAlternative", "select base alternative",
                 colnames(basealt()), colnames(basealt())[1] )
-    
+    }
   })
   
   
   output$Alternativefeaturesvarselect <- renderUI({
     if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
-    
+    if (is.null(input$file)) { return(NULL) }
+    else{
     checkboxGroupInput("AlternativefeaturesAttr", "Select alternative specific variables",
                        setdiff(colnames(Dataset()),c(input$IndividualAttr,input$AlternativesAttr,input$ChoiceAttr)),"")
-    
+    }
   })
   
   output$Individualfeaturesvarselect <- renderUI({
     if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
-
+    if (is.null(input$file)) { return(NULL) }
+    else{
     checkboxGroupInput("IndividualfeaturesAttr", "Select observation/individual specific variables",
                        setdiff(colnames(Dataset()),c(input$IndividualAttr,input$AlternativefeaturesAttr,input$AlternativesAttr,input$ChoiceAttr)),"" )
-
+    }
   })
 
   out = reactive({
@@ -206,9 +218,9 @@ ind.features=paste(input$IndividualfeaturesAttr,collapse = "+")
    #  mlogit.reg=mlogit(reg.form,H)
     #mlogit.reg = mlogit(paste(input$yAttr,"~", rhs() , sep=""), data = mydata2())
     #mlogit.reg = mlogit(formula=as.formula(paste(input$yAttr,"~", rhs() ,sep="")),data=mydata2())
-    formula.reg=as.formula(paste(input$ChoiceAttr,"~",rhs(),sep = ""))
+    formula=as.formula(paste(input$ChoiceAttr,"~",rhs(),sep = ""))
     #DCE_data<- mlogit.data(data=Dataset(), choice = input$ChoiceAttr, shape = "long", alt.var = input$AlternativesAttr,id.var = input$IndividualAttr) 
-    a <- mlogit(formula=formula.reg,data=Dataset(),alt.var = input$AlternativesAttr,id.var = input$IndividualAttr,
+    a <- mlogit(formula=formula,data=Dataset(),alt.var = input$AlternativesAttr,id.var = input$IndividualAttr,
                 choice = input$ChoiceAttr, shape = "long", reflevel=input$BaseAlternative)
 
     return(a)
@@ -255,7 +267,7 @@ ind.features=paste(input$IndividualfeaturesAttr,collapse = "+")
   data.fit$actual=as.vector(Dataset()[which(choice.col==1),input$AlternativesAttr])
   data.fit$obs_ID=as.vector(Dataset()[which(choice.col==1),input$IndividualAttr])
   #data.try=as.data.frame(data.fit)
-  print(data.fit)
+  head(data.fit,10)
     }
 })
   output$ROC = renderPlot({

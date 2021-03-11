@@ -15,10 +15,10 @@ shinyUI(fluidPage(
   sidebarPanel(
 
     # Upload data:
-    h5(p("Perceptual Data Input")),
+    h4(p("Perceptual Data Input")),
     fileInput("file", "Upload Perceptual data"),
     # upload secon data
-    h5(p("Preference Data Input")),
+    h4(p("Preference Data Input")),
     fileInput("file1", "Upload Preference Data"),
     # Variable selection:
     numericInput("k0","Scaling Factor Entities",1.5),

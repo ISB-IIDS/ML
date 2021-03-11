@@ -12,16 +12,13 @@ shinyUI(fluidPage(
   
   # Input in sidepanel:
   sidebarPanel(
-
+    h4(p("Data Input")),
     fileInput("file", "upload data (csv file with header) first column must be observation id"),
-    htmlOutput("xvarselect"),
-    submitButton(text = "refresh", icon("refresh")),br(),  
-   # htmlOutput("fxvarselect"),
-    
     selectInput("select", "choose cluster algorithm", 
                        c("K-Means","Hierarchical"), selected = "K-Means"),
-    
-    numericInput("Clust", "Number of clusters:", 3),
+    numericInput("Clust", "choose number of clusters", 3),
+    h4(p("Data Selection")),
+    htmlOutput("xvarselect"),
     br(),
     #submitButton(text = "Apply Changes", icon("refresh"))
   ),
@@ -44,26 +41,36 @@ shinyUI(fluidPage(
                           ),
                 tabPanel("Summary Stats",
                          #h4("select only numerical variables with no missing values in X and click 'Refresh' "), 
-                         verbatimTextOutput("head"),
-                         submitButton(text = "click this button", icon("refresh")),
-                         verbatimTextOutput("tail"),
-                         h4("data summary"),verbatimTextOutput("summ"),h4("missing data rows"),verbatimTextOutput("missing")),
+                         #verbatimTextOutput("head"),
+                         #verbatimTextOutput("tail"),
+                         h4("data summary"),verbatimTextOutput("summ"),
+                         submitButton(text = "refresh - apply changes", icon("refresh")),br(),
+                         verbatimTextOutput("mscount"),
+                         h4("missing data rows"),verbatimTextOutput("missing")),
                 
                 #tabPanel("Data",h3(textOutput("caption"),tableOutput("table"))),
                 
-                tabPanel("Summary - Cluster Analysis",
-                         verbatimTextOutput("scldt"),
+                tabPanel("Cluster Analysis",
+                         h4("standardized data is used for clustering"),
+                         verbatimTextOutput("scldt"),br(),
+                         h4("select columns with only numerical varaibles"),
+                         h4("check data has no missing values"),
+                         h4("choose cluster algorithm"),
+                         h4("click 'refresh' and wait for algorithm to finish estimation"),
                          submitButton(text = "refresh", icon("refresh")),
-                         h4("select only numerical varaibles with no missing values in X for cluster analysis and click 'refresh'  "),
                          plotOutput("plotpca",height = 400, width = 500),
                          h4(textOutput("caption1")),verbatimTextOutput("summary")),
                 
-                tabPanel("Plot",br(), submitButton(text = "refresh", icon("refresh")),
-                         h4("cluster plot - choose cluster algorithm and click 'refresh' "), plotOutput("plot",height = 700, width = 840)),
-                tabPanel("Cluster Data",br(),
+                tabPanel("Cluster Plot",br(), 
+                         h4("select columns with only numerical varaibles"),
+                         h4("check data has no missing values"),
+                         h4("choose cluster algorithm"),
+                         h4("click 'refresh' and wait for algorithm to finish estimation"),
+                         submitButton(text = "refresh", icon("refresh")),
+                         plotOutput("plot",height = 700, width = 840)),
+                tabPanel("Download Cluster Membership Data",br(),
                          downloadButton('downloadData4', 'Download output file (Works only in browser)'), br(),br(),
                          dataTableOutput("table"),tags$head(tags$style("tfoot {display: table-header-group;}")))
-                
                 
                 )
       ) 

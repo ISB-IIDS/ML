@@ -12,14 +12,14 @@ shinyUI(pageWithSidebar(
   # Input in sidepanel:
   sidebarPanel(
 
-    h5(p("Data Input")),
+    h4(p("Data Input")),
     fileInput("file", "Upload input data (csv file with header)"),
-    h5(p("Data Selection")),
+    h4(p("Data Selection")),
     htmlOutput("yvarselect"),
     htmlOutput("xvarselect"),
   #  submitButton(text = "Apply Changes", icon("refresh")),br(),
     htmlOutput("fxvarselect"),
-    fileInput("filep", "Upload new data for prediction (csv file with header)"),
+  #  fileInput("filep", "Upload new data for prediction (csv file with header)"),
     br()
   ),
   # Main:
@@ -55,10 +55,13 @@ shinyUI(pageWithSidebar(
                 tabPanel("Summary Logit", h4("Summary Logit Model"),verbatimTextOutput("olssummary"),
                               h4('Confusion Matrix'), verbatimTextOutput("validation")),
                          #h4("Summary OLS standardized model"), verbatimTextOutput("olssummarystd")),
-                tabPanel("Prediction Input Data", h4('Input data with prediction'),
+                tabPanel("Prediction Input Data",br(), h4('First 10 rows of predictions for input data'),
                          p('"Y.Prob" column is the predicted probability of Y=1.'),
-                         downloadButton('downloadData2', 'Download data (works only in browser)'),
-                         br(),br(),tableOutput("datatable") #verbatimTextOutput('inputprediction')
+                         verbatimTextOutput('inputprediction'),
+                         h4("Download input data with predictions"),
+                         downloadButton('downloadData2', 'download predictions for input data'),
+                         br(),br(),#tableOutput("datatable")
+                         
                          ),
                # tabPanel("Correlation",h4("Correlation Table - Input data"), verbatimTextOutput("correlation"),
                #          h4("Correlation Visulization - Input Data"),plotOutput("corplot")),
@@ -70,11 +73,13 @@ shinyUI(pageWithSidebar(
                       #   h4("Fitted Values vs Residuals - Input Data"), plotOutput("resplot2"),
                       #   h4("Fitted Values vs Y - Input Data"), plotOutput("resplot3")),
                 tabPanel("Prediction New Data",br(),
+                         h4("Upload new data for prediction should be in the same format as input data (csv file with header) "),
+                         fileInput("filep",""),
                          h4("First 10 rows of predictions for new data (upload prediction data)"),
                          p('"Y.Prob" column is the predicted probability of Y=1.'),
                          verbatimTextOutput('prediction'),
                          h4("Download new data with predictions"),
-                         downloadButton('downloadData1', 'Download predictions (works only in browser)')      ) 
+                         downloadButton('downloadData1', 'download predictions for new data')      ) 
                 )
       ) 
     ) 

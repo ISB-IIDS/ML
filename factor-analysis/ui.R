@@ -11,6 +11,7 @@ shinyUI(fluidPage(
   # Input in sidepanel:
   sidebarPanel(
     # Upload data:
+    h4(p("Data Input")),
     fileInput("file", "Upload input data (csv file with header)"),  
     uiOutput("colList"),
     htmlOutput("fselect"),

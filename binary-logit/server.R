@@ -87,7 +87,7 @@ output$fxvarselect <- renderUI({
   else {
   checkboxGroupInput("fxAttr", "Select factor (categorical) variables in X",
                 #     setdiff(colnames(Dataset.temp()),input$yAttr),"" )
-                setdiff(colnames(Dataset.temp()),input$yAttr),setdiff(colnames(Dataset.temp()),c(input$yAttr,colnames(nu.Dataset()))) )
+                setdiff(colnames(Dataset.temp()),input$yAttr),    setdiff(colnames(Dataset.temp()),c(input$yAttr,colnames(nu.Dataset()))) )
   }
 })
 
@@ -189,7 +189,8 @@ plot_data = reactive({
 
 ols = reactive({
     rhs = paste(input$xAttr, collapse = "+")
-    ols = glm(paste(input$yAttr,"~", rhs , sep=""), data = mydata(), family=binomial)
+    formula= as.formula(paste(input$yAttr,"~", rhs , sep=""))
+    ols = glm(formula, data = mydata(), family=binomial)
   return(ols)
 })
 

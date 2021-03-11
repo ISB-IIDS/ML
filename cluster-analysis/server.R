@@ -67,7 +67,9 @@ shinyServer(function(input, output){
   
   out = reactive({
     data = mydata()
-    Missing=data[!complete.cases(data),]
+    Missing1=(data[!complete.cases(data),])
+    Missing=(Missing1)
+    mscount=nrow(Missing1)
     Dimensions = dim(data)
     Head = head(data)
     Tail = tail(data)
@@ -84,7 +86,7 @@ shinyServer(function(input, output){
     Summary = list(Numeric.data = round(stat.desc(nu.data)[c(4,5,6,8,9,12,13),] ,4), factor.data = describe(fa.data))
     # Summary = list(Numeric.data = round(stat.desc(nu.data)[c(4,5,6,8,9,12,13),] ,4), factor.data = describe(fa.data))
 
-    out = list(Dimensions = Dimensions, Summary =Summary ,Tail=Tail, Head=Head, MissingDataRows=Missing, num.data=nu.data, factr.data=fa.data)
+    out = list(Dimensions = Dimensions, Summary =Summary ,Tail=Tail, Head=Head, MissingDataRows=Missing, num.data=nu.data, factr.data=fa.data,missing.data.rows.count=mscount)
     return(out)
   })
   
@@ -106,8 +108,19 @@ shinyServer(function(input, output){
   output$scldt = renderPrint({
     if (is.null(input$file)) {return(NULL)}
     else {
-      dt=Dataset2()
-      list(Note="data is 'mean-centered' and 'scaled' for cluster analysis", dtt=head(dt))
+      data=Dataset2()
+      Class = NULL
+      for (i in 1:ncol(data)){
+        c1 = class(data[,i])
+        Class = c(Class, c1)
+      }
+      
+      nu = which(Class %in% c("numeric","integer"))
+      fa = which(Class %in% c("factor","character"))
+      nu.data = data[,nu] 
+      fa.data = data[,fa] 
+      summary = list(standardize.data = round(stat.desc(nu.data)[c(4,5,6,8,9,12,13),] ,5))
+      list(note="data is 'mean-centered' and 'scaled' for cluster analysis", summary=summary)
     }
     
   })
@@ -124,6 +137,13 @@ shinyServer(function(input, output){
     if (is.null(input$file)) {return(NULL)}
     else {
       out()[5]
+    }
+  })
+  
+  output$mscount = renderPrint({
+    if (is.null(input$file)) {return(NULL)}
+    else {
+      out()[8]
     }
   })
   
@@ -201,7 +221,7 @@ shinyServer(function(input, output){
           return(data.frame())
         }
         else {
-          Summary = list( t0()[2], t0()[3], t0()[4])
+          Summary = list( t0()[3], t0()[4], t0()[2])
           Summary
         }
       })
@@ -214,7 +234,7 @@ shinyServer(function(input, output){
         }
         
         else {
-          Summary = list(t0()[2], t0()[3], t0()[4], t0()[5] )
+          Summary = list(t0()[3], t0()[4], t0()[5], t0()[2] )
           Summary
         }
       })
@@ -229,7 +249,7 @@ shinyServer(function(input, output){
           fit <- hclust(d, method="ward.D") 
           Cluster.Membership =  as.character(cutree(fit, k=input$Clust))
           clustmeans = aggregate(mydata(),by = list(Cluster.Membership), FUN = mean)
-          Summary = list(Cluster.Membership = Cluster.Membership, Cluster.Means =clustmeans, Count = table(Cluster.Membership), ModelSumm = fit )
+          Summary = list(Cluster.Means =clustmeans, Count = table(Cluster.Membership), ModelSumm = fit, Cluster.Membership = Cluster.Membership )
           Summary
         }
       })

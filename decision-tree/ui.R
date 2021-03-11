@@ -17,12 +17,12 @@ shinyUI(
         sliderInput('sample','test sample percentage',10,40,25),
         # h4(p("Select Response Variable")),
         sliderInput('cp','complexity parameter',0,0.5,0),
-        
+        h4(p(" Data Selection")),
         htmlOutput("yvarselect"),
         htmlOutput("xvarselect"),
       #  submitButton(text = "Apply Changes", icon("refresh")),br(),
         htmlOutput("fxvarselect"),
-        fileInput("filep", "Upload new data for prediction (csv file)")
+     #   fileInput("filep", "Upload new data for prediction (csv file)")
       ),   # end of sidebar panel
       
     mainPanel(
@@ -51,7 +51,7 @@ shinyUI(
                     tabPanel("Summary Stats",h4("Data"), verbatimTextOutput("head"),verbatimTextOutput("tail"),
                             h4("Data Summary"),verbatimTextOutput("summarydata"),h4("Missing Data Rows"),verbatimTextOutput("missing")),
                     tabPanel("Model Output",
-                             h4('Be patient model may take some time to finish estimation'),
+                             h3('Be patient model may take some time to finish estimation'),
                              h4('Model Result Summary'),
                              verbatimTextOutput("results"),
                              h4('Variable importance'),
@@ -90,13 +90,15 @@ shinyUI(
                        #      ),
                     #tabPanel("Variable",verbatimTextOutput('imp')),
                     tabPanel("Prediction New Data",br(),
+                             h4("Upload new data for prediction should be in the same format as input data (csv file with header) "),
+                             fileInput("filep",""),
                              #h4('Number of Rows and Columns in New Prediction Data'),
                              #verbatimTextOutput('predictobs'),
                              h4("First 10 rows of new data with predictions"),
                              p('"Yhat" column is the predicted value.'),
                              verbatimTextOutput('prediction'),
                              h4("Download new data with predictions"),
-                             downloadButton('downloadData1', 'Download predictions (Works only in browser)')
+                             downloadButton('downloadData1', 'download predictions for new data')
                              )
                              
         ) # end of tabsetPanel

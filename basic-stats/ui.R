@@ -13,9 +13,9 @@ shinyUI(pageWithSidebar(
   # Input in sidepanel:
   sidebarPanel(
 
-    h5(p("Data Input")),
+    h4(p("Data Input")),
     fileInput("file", "Upload input data (csv file with header)"),
-    h5(p("Data Selection")),
+    h4(p("Data Selection")),
     htmlOutput("xvarselect"),
     htmlOutput("fxvarselect"),
     #submitButton(text = "Apply Changes", icon("refresh")),br(),
@@ -46,19 +46,23 @@ shinyUI(pageWithSidebar(
                          h4("Data Summary"),verbatimTextOutput("summary")),
                 tabPanel("Missing Data", h4("Missing Data Rows"),verbatimTextOutput("missing")),
                 tabPanel("Correlation",
-                          h4("Correlation Visulization"),plotOutput("corplot"),
-                          h4("Correlation Table"), verbatimTextOutput("correlation")),
+                          h4("Correlation Table"), verbatimTextOutput("correlation"),
+                          h4("Correlation Visulization"),verbatimTextOutput("mscount"),plotOutput("corplot")),
+                          
                 tabPanel("Box Plot", h4("Box Plots"),plotOutput("bplot")),
-                tabPanel("Data Visulization",br(),
-                         h4("randomly select 500 rows from input data - if less than 500 rows in dataset, select whole dataset"),plotOutput("heatmap1")),
-                tabPanel("Outliers",htmlOutput("outselect"), 
-                         #h4("selcet a variable at the top for Rosner's outliers"),
+                tabPanel("Data Visulization",
+                         h4("Randomly select 500 rows from input data - if less than 500 rows in dataset, select whole dataset"),plotOutput("heatmap1")),
+                tabPanel("Outliers",
+                         h4("Select variable for Rosner's outlier test"),
+                         htmlOutput("outselect"), 
                          plotOutput("hist"),
                          verbatimTextOutput("outlier")),
                 tabPanel("Data with Dummy Variables",
-                         br(),
-                         h4(p("download input data with dummy variable columns added")),
-                         downloadButton('downloadDatanew', 'download data'),  )
+                         h4(p("Download input data with dummy variable columns added")),
+                         downloadButton('downloadDatanew', 'download input data with dummy variables'),  
+                         h5("First 10 rows of input data with dummy variable coding for factor/categorical variables"),
+                         verbatimTextOutput("dummydata"),
+                         br(),br()   )
                 )
       ) 
     ) 

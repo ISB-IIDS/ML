@@ -34,7 +34,7 @@ Dataset <- reactive({
 })
 
 
-pred.readdata <- reactive({
+Datasetp <- reactive({
   if (is.null(input$filep)) { return(NULL) }
   else{
     readdata <- as.data.frame(read.csv(input$filep$datapath ,header=TRUE, sep = ","))
@@ -60,7 +60,7 @@ output$yvarselect <- renderUI({
   if (is.null(input$file)) {return(NULL)}
   else {
   selectInput("yAttr", "Select Y variable",
-                     colnames(nu.Dataset()), colnames(Dataset())[1])
+                     colnames(nu.Dataset()), colnames(nu.Dataset())[1])
   }
 })
 
@@ -106,6 +106,18 @@ mydata = reactive({
   for (j in 1:length(input$fxAttr)){
       mydata[,input$fxAttr[j]] = factor(mydata[,input$fxAttr[j]])
   }
+  }
+  return(mydata)
+  
+})
+
+pred.readdata = reactive({
+  mydata = Datasetp()
+  
+  if (length(input$fxAttr) >= 1){
+    for (j in 1:length(input$fxAttr)){
+      mydata[,input$fxAttr[j]] = factor(mydata[,input$fxAttr[j]])
+    }
   }
   return(mydata)
   
@@ -284,7 +296,8 @@ output$corplot = renderPlot({
 
 ols = reactive({
     rhs = paste(input$xAttr, collapse = "+")
-    ols = lm(paste(input$yAttr,"~", rhs , sep=""), data = mydata())
+    formula= as.formula(paste(input$yAttr,"~", rhs , sep=""))
+    ols = lm(formula, data = mydata())
   return(ols)
 })
 
@@ -325,7 +338,8 @@ ols2 = reactive({
   Summary = list(Numeric.data = round(stat.desc(nu.data)[c(4,5,6,8,9,12,13),] ,4), factor.data = describe(fa.data))
   
   rhs = paste(input$xAttr, collapse = "+")
-  olsstd = lm(paste(input$yAttr,"~", rhs , sep=""), data = dstd)
+  formula= as.formula(paste(input$yAttr,"~", rhs , sep=""))
+  olsstd = lm(formula, data = dstd)
   ols2=list(Dimensions = Dimensions,Summary =Summary, ols=olsstd)
   return(ols2)
 
@@ -401,6 +415,11 @@ prediction = reactive({
   out = data.frame(Yhat = val, pred.readdata())
 })
 
+output$inputprediction =  renderPrint({
+  if (is.null(input$filep)) {return(NULL)}
+  head(inputprediction(),10)
+})
+
 output$prediction =  renderPrint({
   if (is.null(input$filep)) {return(NULL)}
   head(prediction(),10)
@@ -410,7 +429,7 @@ output$prediction =  renderPrint({
 output$downloadData1 <- downloadHandler(
   filename = function() { "Predicted Data.csv" },
   content = function(file) {
-    if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
+    if (identical(Datasetp(), '') || identical(Datasetp(),data.frame())) return(NULL)
     write.csv(prediction(), file, row.names=F, col.names=F)
   }
 )

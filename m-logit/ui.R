@@ -16,9 +16,9 @@ shinyUI(pageWithSidebar(
   
   # Input in sidepanel:
   sidebarPanel(
-    h5(p("Data Input")),
+    h4(p("Data Input")),
     fileInput("file", "Upload input data (csv file with header)"),
-    h5(p("Data Selection")),
+    h4(p("Data Selection")),
     htmlOutput("Individualvarselect"),
     htmlOutput("Choicevarselect"),
     htmlOutput("Alternativesvarselect"),
@@ -26,7 +26,7 @@ shinyUI(pageWithSidebar(
     htmlOutput("Alternativefeaturesvarselect"),
    # submitButton(text = "Apply Changes", icon("refresh")),br(),
     htmlOutput("Individualfeaturesvarselect"),
-    fileInput("filep", "Upload new data for prediction (csv file with header)"),
+ #   fileInput("filep", "Upload new data for prediction (csv file with header)"),
     br()
   ),
   # Main:
@@ -75,10 +75,11 @@ shinyUI(pageWithSidebar(
                 tabPanel("Model Output",     htmlOutput("BaseAlternativeselect")  ,h4("Model Summary"),verbatimTextOutput("olssummary")),
               #  tabPanel("Correlation",h4("Correlation Table"), verbatimTextOutput("correlation"),h4("Correlation"),plotOutput("corplot")),
                  tabPanel("Prediction Probablities", 
-                          h4(p("Download output probabilities (training data)")),
-                          downloadButton('downloadData1', 'Download output probabilities (works only in browsers)'),
-                          br(),br(),
-                          h4("Probablities"),verbatimTextOutput("probablities")),
+                          h4("predicted probablities"),verbatimTextOutput("probablities"),
+                          h4(p("download prediction probabilities for input data")),
+                          downloadButton('downloadData1', 'download predicted probabilities for input data'),
+                          br(),
+                          ),
                  tabPanel("Confusion Matrix", h4("Confusion Matrix Summary"),verbatimTextOutput("confusionmatrix")),
                  tabPanel("ROC Curve", h4("ROC Curve Summary"),plotOutput("ROC")),
                  
@@ -89,11 +90,12 @@ shinyUI(pageWithSidebar(
                 #          plotOutput("resplot3"),h4("Residuals plot"),
                 #          plotOutput("resplot1")),
                 # tabPanel("Data with predicted Y",tableOutput("datatable")),
-              tabPanel("Prediction New Data", 
-                       h4(p("Download predictions for new data")),
-                       downloadButton('downloadData2', 'Download prediction probabilities (works only in browsers)'))
-              
-                
+              tabPanel("Prediction New Data",br(),
+                       h4("Upload data for prediction should be in the same format as input data (csv file with header) "),
+                       fileInput("filep", ""),
+                       h4(p("download predictions for new data")),
+                       downloadButton('downloadData2', 'download prediction probabilities for new data'))
+
     )#type tabs
   ) #main panel
 ) #page with side bar
