@@ -9,7 +9,7 @@ if(!require("RColorBrewer")){install.packages("RColorBrewer")}
 if(!require("Hmisc")){install.packages("Hmisc")}
 if(!require("ggplot2")){install.packages("ggplot2")}
 if(!require("reshape2")){install.packages("reshape2")}
-
+if(!require("e1071")){install.packages("e1071")}
 if (!require("corrplot")) {install.packages("corrplot")}
 if (!require("caret")) {install.packages("caret")}
 if (!require("Rfast")) {install.packages("Rfast")}
@@ -30,6 +30,7 @@ library(Rfast)
 library(nnet)
 library(dummies)
 library(multiROC)
+library(e1071)
 # library(gplot)
 
 
@@ -56,7 +57,7 @@ library(multiROC)
     if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
     if (is.null(input$file)) { return(NULL) }
     else{
-    selectInput("IndividualAttr", "Select observation/individual ID column",
+    selectInput("IndividualAttr", "Select individual ID variable",
                 colnames(Dataset()), colnames(Dataset())[1])
     }
     })
@@ -65,7 +66,7 @@ library(multiROC)
     if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
     if (is.null(input$file)) { return(NULL) }
     else{
-    selectInput("ChoiceAttr", "Select choice/outcome column",
+    selectInput("ChoiceAttr", "Select choice/outcome variable",
                # colnames(Dataset()), colnames(Dataset())[1])
                 setdiff(colnames(Dataset()),input$IndividualAttr), setdiff(colnames(Dataset()),input$IndividualAttr)[1])
     }
@@ -77,8 +78,9 @@ library(multiROC)
     if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
     if (is.null(input$file)) { return(NULL) }
     else{
-    selectInput("AlternativesAttr", "Select avaialble alternatives column",
-                       setdiff(colnames(Dataset()),c(input$IndividualAttr,input$ChoiceAttr)), setdiff(colnames(Dataset()),c(input$IndividualAttr,input$ChoiceAttr))[1])
+    selectInput("AlternativesAttr", "Select avaialble alternatives variable",
+                       setdiff(colnames(Dataset()),c(input$IndividualAttr,input$ChoiceAttr)), 
+                      setdiff(colnames(Dataset()),c(input$IndividualAttr,input$ChoiceAttr))[1])
     }
   })
   
@@ -96,18 +98,18 @@ library(multiROC)
     else{
     #if (identical(base(), '') || identical(base(),data.frame())) return(NULL)
     #y=t(as.matrix(table(Dataset()$AlternativesAttr))) 
-    selectInput("BaseAlternative", "select base alternative",
+    selectInput("BaseAlternative", "Select base (from avaialble alternatives)",
                 colnames(basealt()), colnames(basealt())[1] )
     }
   })
-  
-  
+
   output$Alternativefeaturesvarselect <- renderUI({
     if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
     if (is.null(input$file)) { return(NULL) }
     else{
-    checkboxGroupInput("AlternativefeaturesAttr", "Select alternative specific variables",
-                       setdiff(colnames(Dataset()),c(input$IndividualAttr,input$AlternativesAttr,input$ChoiceAttr)),"")
+      checkboxGroupInput("AlternativefeaturesAttr", "Select alternative-specific X variables",
+                         setdiff(colnames(Dataset()),c(input$IndividualAttr,input$AlternativesAttr,input$ChoiceAttr)),
+                         ""   )
     }
   })
   
@@ -115,15 +117,24 @@ library(multiROC)
     if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
     if (is.null(input$file)) { return(NULL) }
     else{
-    checkboxGroupInput("IndividualfeaturesAttr", "Select observation/individual specific variables",
-                       setdiff(colnames(Dataset()),c(input$IndividualAttr,input$AlternativefeaturesAttr,input$AlternativesAttr,input$ChoiceAttr)),"" )
+      checkboxGroupInput("IndividualfeaturesAttr", "Select individual specific X variables",
+                         setdiff(colnames(Dataset()),c(input$IndividualAttr,input$AlternativesAttr,input$ChoiceAttr,input$AlternativefeaturesAttr)),
+                         ""
+                        # setdiff(colnames(Dataset()),c(input$IndividualAttr,input$AlternativesAttr,input$ChoiceAttr)) 
+                          )
     }
   })
+  
 
+  mydata = reactive({
+    mydata = Dataset()[,c(input$IndividualAttr,input$AlternativesAttr,input$ChoiceAttr,input$IndividualfeaturesAttr,input$AlternativefeaturesAttr)]
+    return(mydata)
+  })
+  
   out = reactive({
-    data = Dataset()
+    data = mydata()
     Missing1=(data[!complete.cases(data),])
-    Missing=(Missing1)
+    Missing=head(Missing1)
     mscount=nrow(Missing1)
     Dimensions = dim(data)
     Head = head(data)
@@ -189,12 +200,7 @@ library(multiROC)
   })
 
   
-  # mydata2 = reactive({
-  #   H=dfidx(Dataset(),choice = input$yAttr,varying = input$xAttr)
-  #   return(H)
-  # })
-  
-  rhs=reactive({
+rhs=reactive({
       if (length(input$IndividualfeaturesAttr)>=1){
 ind.features=paste(input$IndividualfeaturesAttr,collapse = "+")
           if (length(input$AlternativefeaturesAttr)>=1){
@@ -205,7 +211,7 @@ ind.features=paste(input$IndividualfeaturesAttr,collapse = "+")
           #rhs=paste(input$AlternativefeaturesAttr,collapse = "+")
         if (length(input$AlternativefeaturesAttr)>=1){
           rhs=paste(input$AlternativefeaturesAttr,collapse = "+")
-        } else {rhs=paste("0 | 1",sep="")}
+        } else {rhs=paste("0|1",sep="")}
           }
       
       return(rhs)
@@ -220,9 +226,8 @@ ind.features=paste(input$IndividualfeaturesAttr,collapse = "+")
     #mlogit.reg = mlogit(formula=as.formula(paste(input$yAttr,"~", rhs() ,sep="")),data=mydata2())
     formula=as.formula(paste(input$ChoiceAttr,"~",rhs(),sep = ""))
     #DCE_data<- mlogit.data(data=Dataset(), choice = input$ChoiceAttr, shape = "long", alt.var = input$AlternativesAttr,id.var = input$IndividualAttr) 
-    a <- mlogit(formula=formula,data=Dataset(),alt.var = input$AlternativesAttr,id.var = input$IndividualAttr,
-                choice = input$ChoiceAttr, shape = "long", reflevel=input$BaseAlternative)
-
+    a <- mlogit(formula=formula,data=mydata(),alt.var = input$AlternativesAttr,id.var = input$IndividualAttr,
+                choice = input$ChoiceAttr,reflevel=input$BaseAlternative)
     return(a)
   })
   
@@ -252,6 +257,14 @@ ind.features=paste(input$IndividualfeaturesAttr,collapse = "+")
     data.try=as.data.frame(data.fit)
     
     caret::confusionMatrix(as.factor(data.try$predict),as.factor(data.try$actual))
+    }
+  })
+  
+  output$probablities1 = renderPrint({
+    if (is.null(input$file)) {return(NULL)}
+    else {
+      data.fit=summary(fitted(ols(),outcome=FALSE))
+      (data.fit)
     }
   })
   
@@ -340,7 +353,15 @@ ind.features=paste(input$IndividualfeaturesAttr,collapse = "+")
     content = function(file) {
       if (is.null(input$filep)) {return(NULL)}
       else { 
-      write.csv(ols.pred(), file, row.names=F, col.names=F) 
+        data.fit=(fitted(object = ols.pred(), outcome=FALSE))
+        trial=Rfast::rowMaxs(data.fit,value = FALSE)
+        data.fit=as.data.frame(data.fit)
+        data.fit$predict=colnames(data.fit)[trial]
+        choice.col=(as.vector(Dataset()[,input$ChoiceAttr]))
+        data.fit$actual=as.vector(Dataset()[which(choice.col==1),c(input$AlternativesAttr)])
+        data.fit$obs_ID=as.vector(Dataset()[which(choice.col==1),c(input$IndividualAttr)])
+        data.try=as.data.frame(c(data.fit))
+        write.csv(data.try, file, row.names=F, col.names=F) 
       }
                               }
   ) 

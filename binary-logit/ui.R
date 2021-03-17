@@ -1,5 +1,5 @@
 ####################################################
-#      Summary & GLM App                           #
+#      Summary & Binary App                           #
 ####################################################
 
 library("shiny")
@@ -29,57 +29,94 @@ shinyUI(pageWithSidebar(
                 #
                 
                 tabPanel("Overview",
+                         br(),
+                         p("In statistics, the logistic regression (or binary logit model) is used to model the probability of a certain class 
+                           or event existing such as pass/fail, win/lose, alive/dead or healthy/sick."),
+                         tags$a(href="https://en.wikipedia.org/wiki/Logistic_regression", "-Wikipedia"),
+                         br(),
                          h4(p("How to use this shiny application")),
-                         p("This shiny application require one data input from the user. To do so, click on the Browse (in left side-bar panel)
+                         p("This shiny application requires one data input from the user. To do so, click on 'Browse' (in the panel on the left)
                             and upload the csv data input file.
                            Note that this application can read only csv file (comma delimited file), so if you don't have csv input data file, first convert your data in csv format 
                            and then proceed. Make sure you have top row as variable names.",
                            align="justify"),
-                         p("Once csv file is uploaded successfully, variables in the data file will reflect in left-side Data Selection Panel. Now you can select 
+                         p("Once csv file is uploaded successfully, variables in the data file will reflect in the 'Data Selection' panel on the left. Now you can select 
                             dependent variable (Y Variable) from drop-down menu. By default all other remaining variables will be selected as explanatory variables (X variables). 
                               If you want to drop any variable from explanatory variables, just uncheck that variable and it will be dropped from the model analysis. 
                             If any of the explanatory variables is a factor variable, you can define that variable as factor variable by selecting that variable in the last list of variables.",
                            align="justify"),
                          p("Binary logit classification model trains better when observations are equal distributed between two classes (0 and 1 outcomes).",
                            align="justify"),
+                         #h4(p("Download Sample Input File")),
+                         downloadButton('downloadData', 'download sample data'),
+                         br(), br(),
+                         p('If your data has more than two classes (categorical outcomes) use discriminant analysis.',style="color:red"),
+                         h4(tags$a(href= 'https://isb-iids.shinyapps.io/discriminant-analysis/',"Click here to open Discriminant Analysis App")),
                          br(),
-                    #     h4(p("Download Sample Input Files")),
-                         # br(),
-                     #    downloadButton('downloadData', 'Download Sample Data (works only in browsers)'),
-                      #   br(),
-                       #  br(),
                         # p("*Please note that download will not work with RStudio interface. Download will work only in web-browsers."),
                          ),
-                tabPanel("Data Summary",h4("Data"), verbatimTextOutput("head"),verbatimTextOutput("tail"),
-                         h4("Data Summary"),verbatimTextOutput("summary"),h4("Missing Data Rows"),verbatimTextOutput("missing")),
-                tabPanel("Summary Logit", h4("Summary Logit Model"),verbatimTextOutput("olssummary"),
-                              h4('Confusion Matrix'), verbatimTextOutput("validation")),
+                tabPanel("Data Summary",h4("Selected Variables"), verbatimTextOutput("head"),#verbatimTextOutput("tail"),
+                         h4("Data Summary of Selected X Variables"),verbatimTextOutput("summary"),
+                         h4("Missing Data Rows"),verbatimTextOutput("missing")),
+                tabPanel("Summary Logit", br(), (p('Y must be numerical binary variable',style="color:red")),
+                         h4("Summary Logistic Regression Model"),verbatimTextOutput("olssummary"),
+                         h4("Correlation Table"),verbatimTextOutput("correlation"),
+                         (p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")),
+                         h4("Correlation Visulization - Input Data"),plotOutput("corplot")
+                         #h4('Confusion Matrix'), verbatimTextOutput("validation")),
                          #h4("Summary OLS standardized model"), verbatimTextOutput("olssummarystd")),
-                tabPanel("Prediction Input Data",br(), h4('First 10 rows of predictions for input data'),
-                         p('"Y.Prob" column is the predicted probability of Y=1.'),
-                         verbatimTextOutput('inputprediction'),
+                         ),
+                tabPanel("Input Data with Predictions",
+                         
                          h4("Download input data with predictions"),
                          downloadButton('downloadData2', 'download predictions for input data'),
-                         br(),br(),#tableOutput("datatable")
+                         #h4("First 10 rows of predictions for input data"),
+                         br(),br(),h4('Y.Prob" column is the predicted probability of Y=1.'),
+                         #verbatimTextOutput('inputprediction'),
+                         dataTableOutput("inputprediction"),tags$head(tags$style("tfoot {display: table-header-group;}")),
+                         br(),br()  #,tableOutput("datatable")
+                         
+                         # br(), h4('First 10 rows of predictions for input data'),
+                         # p('"Y.Prob" column is the predicted probability of Y=1.'),
+                         # verbatimTextOutput('inputprediction'),
+                         # h4("Download input data with predictions"),
+                         # downloadButton('downloadData2', 'download predictions for input data'),
+                         # br(),br(),#tableOutput("datatable")
                          
                          ),
                # tabPanel("Correlation",h4("Correlation Table - Input data"), verbatimTextOutput("correlation"),
                #          h4("Correlation Visulization - Input Data"),plotOutput("corplot")),
-                tabPanel("ROC", 
-                         sliderInput('cutoff','Cutoff Probability (default=0.5)',0,1,0.5),
+                tabPanel("Cutoff and ROC", 
+                         h4("Suggested Cutoff Probability: Choose Cutoff to Maximize Sensitivity + Specificity"),
+                         sliderInput('cutoff','Cutoff Probability',0,1,0.5),
+                         (p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")),verbatimTextOutput("mscount"),
+                         (p('Y must be numerical binary variable',style="color:red")),
                          h4("Confusion Matrix Summary"),verbatimTextOutput("confusionmatrix"),
+                         #h4("Fitted Values vs Y - Input Data"),
+                         plotOutput("resplot3"),
                          h4("ROC Curve"),plotOutput("roc")),
                 #tabPanel("Residuals Plot",
                       #   h4("Fitted Values vs Residuals - Input Data"), plotOutput("resplot2"),
                       #   h4("Fitted Values vs Y - Input Data"), plotOutput("resplot3")),
-                tabPanel("Prediction New Data",br(),
-                         h4("Upload new data for prediction should be in the same format as input data (csv file with header) "),
-                         fileInput("filep",""),
-                         h4("First 10 rows of predictions for new data (upload prediction data)"),
-                         p('"Y.Prob" column is the predicted probability of Y=1.'),
-                         verbatimTextOutput('prediction'),
+                tabPanel("Prediction New Data",
+                         h4("Upload new data for prediction, it should be in the same format as input data file (csv file with header) "),
+                         fileInput("filep", ""),
                          h4("Download new data with predictions"),
-                         downloadButton('downloadData1', 'download predictions for new data')      ) 
+                         downloadButton('downloadData1', 'download predictions for new data'),
+                         #h4("First 10 rows of predictions for new data (upload prediction data)"),
+                         br(),br(),h4('Y.Prob column is the predicted probability of Y=1.'),
+                         #verbatimTextOutput('prediction'),
+                         dataTableOutput("prediction"),tags$head(tags$style("tfoot {display: table-header-group;}")),br(),br()
+                         
+                         # br(),
+                         # h4("Upload new data for prediction, it should be in the same format as input data file (csv file with header) "),
+                         # fileInput("filep",""),
+                         # h4("First 10 rows of predictions for new data (upload prediction data)"),
+                         # p('"Y.Prob" column is the predicted probability of Y=1.'),
+                         # verbatimTextOutput('prediction'),
+                         # h4("Download new data with predictions"),
+                         # downloadButton('downloadData1', 'download predictions for new data')      
+                         ) 
                 )
       ) 
     ) 

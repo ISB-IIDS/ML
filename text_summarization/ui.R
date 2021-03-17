@@ -31,12 +31,15 @@ shinyUI(fluidPage(
             
             tabsetPanel(type = "tabs",
                         
-                    tabPanel("Overview",h4(p("How to use this App")),
+                    tabPanel("Overview",br(),h4(p("How to use this App")),
                              
                        p("To use this app you need a document (e.g., newspaper article etc.) in txt file format.\n\n 
                        To upload the article text, click on Browse in left-sidebar panel and upload the txt file from your local machine. \n\n
-                       Once the file is uploaded, the shinyapp will compute a text summary in the back-end with default inputs and accordingly results will be displayed in various tabs.", align = "justify")),
-        
+                       Once the file is uploaded, the shinyapp will compute a text summary in the back-end with default inputs and accordingly results will be displayed in various tabs.", align = "justify"),
+                    h4(p("Download sample input file")),
+                    downloadButton('downloadData', 'Download Sample Data'),
+                    br(), br(),
+            ),
             
                     tabPanel("Article Sentences",
                              h4(p("Original Article Sentences")),

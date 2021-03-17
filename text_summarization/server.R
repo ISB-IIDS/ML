@@ -76,6 +76,13 @@ shinyServer(function(input, output) {
         
     })
     
+    output$downloadData <- downloadHandler(
+        filename = function() { "exampletext.txt" },
+        content = function(file) {
+            writeLines(readLines("data/exampletext.txt"), file)
+        }
+       )
+    
     output$output2 <- renderPlot({  
             
         ## word-tokenize too. for IDing keywords
@@ -110,6 +117,4 @@ shinyServer(function(input, output) {
         })
         
 
-        
-    
 }) # shinyServer func ends

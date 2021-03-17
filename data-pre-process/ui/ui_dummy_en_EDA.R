@@ -34,7 +34,7 @@ tabPanel('EDA', value = 'tab_eda', icon = icon('stats', lib = 'glyphicon'),
                                  fluidRow(
                                    column(12, align = 'left',
                                           h4('Summary Statistics'),
-                                          p('Generate descriptive statistics for continuous data.')
+                                          p('Generates descriptive statistics for continuous data.')
                                    )
                                  ),
                                  hr(),

@@ -5,8 +5,8 @@ account: iids
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3772295
-bundleId: 4329021
+bundleId: 4352723
 url: https://isb-iids.shinyapps.io/discriminant-analysis/
-when: 1615436463.01838
+when: 1615897794.71287
 asMultiple: FALSE
 asStatic: FALSE

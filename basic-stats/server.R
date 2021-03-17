@@ -7,10 +7,14 @@ if(!require("RColorBrewer")){install.packages("RColorBrewer")}
 if(!require("Hmisc")){install.packages("Hmisc")}
 if(!require("ggplot2")){install.packages("ggplot2")}
 if(!require("reshape2")){install.packages("reshape2")}
-if (!require("corrplot")) {install.packages("corrplot")}
-if (!require("PerformanceAnalytics")) {install.packages("PerformanceAnalytics")}
-if (!require("EnvStats")) {install.packages("EnvStats")}
-if (!require("fastDummies")) {install.packages("fastDummies")}
+if(!require("corrplot")) {install.packages("corrplot")}
+if(!require("PerformanceAnalytics")) {install.packages("PerformanceAnalytics")}
+if(!require("EnvStats")) {install.packages("EnvStats")}
+if(!require("fastDummies")) {install.packages("fastDummies")}
+if(!require("magrittr")) {install.packages("magrittr")} 
+if(!require("dplyr")) {install.packages("dplyr")}
+if(!require("ggpubr")) {install.packages("ggpubr")}
+
 
 library(shiny)
 library(pastecs)
@@ -22,6 +26,9 @@ library(corrplot)
 library(PerformanceAnalytics)
 library(EnvStats)
 library(fastDummies)
+library(magrittr)
+library(dplyr)
+library(ggpubr)
 
 # library(gplot)
 
@@ -86,7 +93,7 @@ mydata = reactive({
 out = reactive({
 data = mydata()
 Missing1=(data[!complete.cases(data),])
-Missing=(Missing1)
+Missing=head(Missing1)
 mscount=nrow(Missing1)
 Dimensions = dim(data)
 Head = head(data)
@@ -225,6 +232,22 @@ output$corplot = renderPlot({
            tl.srt = 45) 
   }
   
+})
+
+output$corplot1 = renderPlot({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    my_data = out()[[5]]
+    cor.mat <- 1-cor(my_data)
+    mds.cor <-  (cor.mat) %>%
+      cmdscale() %>%
+      as_tibble()
+    colnames(mds.cor) <- c("Dim.1", "Dim.2")
+    ggscatter(mds.cor, x = "Dim.1", y = "Dim.2", 
+              size = 1,
+              label = colnames(cor.mat),
+              repel = TRUE)  
+    }
 })
 
 

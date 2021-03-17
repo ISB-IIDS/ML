@@ -25,13 +25,13 @@ shinyServer(function(input, output){
     else{
       Dataset <- as.data.frame(read.csv(input$file$datapath ,header=TRUE, sep = ","))
       rownames(Dataset) = Dataset[,1]
-      Dataset11 = Dataset[,2:ncol(Dataset)]
+      Dataset11 = Dataset[,1:ncol(Dataset)]
       return(Dataset11)
     }
   })
   
   nu.Dataset = reactive({
-    data = Dataset()
+    data = Dataset()[,2:ncol(Dataset())]
     Class = NULL
     for (i in 1:ncol(data)){
       c1 = class(data[,i])
@@ -47,7 +47,7 @@ shinyServer(function(input, output){
     else {
     if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
     checkboxGroupInput("xAttr", "Select only numerical X variables",
-                       colnames(Dataset()), colnames(nu.Dataset()) )
+                       colnames(nu.Dataset()), colnames(nu.Dataset()) )
     }
   })
   
@@ -68,11 +68,11 @@ shinyServer(function(input, output){
   out = reactive({
     data = mydata()
     Missing1=(data[!complete.cases(data),])
-    Missing=(Missing1)
+    Missing=head(Missing1)
     mscount=nrow(Missing1)
     Dimensions = dim(data)
-    Head = head(data)
-    Tail = tail(data)
+    Head = head(Dataset())
+    Tail = tail(Dataset())
     Class = NULL
     for (i in 1:ncol(data)){
       c1 = class(data[,i])
@@ -168,8 +168,8 @@ shinyServer(function(input, output){
       
       else {
         fit = kmeans(Dataset2(),input$Clust)
-        Segment =  fit$cluster
-        d = data.frame(r.name = row.names(mydata()),Segment,mydata())
+        cluster =  fit$cluster
+        d = data.frame(obs.id = row.names(mydata()),cluster,mydata())
         Cluster.Membership = as.character(fit$cluster)
         clustmeans = aggregate(mydata(),by = list(Cluster.Membership), FUN = mean)
         Summary = list(d, Cluster.Membership = Cluster.Membership, Cluster.Means =clustmeans, Count = table(Cluster.Membership) )
@@ -185,8 +185,8 @@ shinyServer(function(input, output){
       else {
         distm <- dist(Dataset2(), method = "euclidean") # distance matrix
         fit <- hclust(distm, method="ward.D") 
-        Segment =  cutree(fit, k=input$Clust)
-        d = data.frame(r.name = row.names(mydata()),Segment,mydata())
+        cluster =  cutree(fit, k=input$Clust)
+        d = data.frame(obs.id = row.names(mydata()),cluster,mydata())
         Cluster.Membership =  as.character(cutree(fit, k=input$Clust))
         clustmeans = aggregate(mydata(),by = list(Cluster.Membership), FUN = mean)
         Summary = list(d, Cluster.Membership = Cluster.Membership, Cluster.Means =clustmeans, Count = table(Cluster.Membership), ModelSumm = fit )
@@ -205,9 +205,9 @@ shinyServer(function(input, output){
     
     output$caption1 <- renderText({
       if (input$select == ".") return ("choose cluster algorithm and click ''Apply Changes'' ")
-      #else if (input$select == "Model Based") return ("Model Based Segmentation -  Summary")
-      else if (input$select == "K-Means") return ("K-Means Segmentation -  Summary")
-      else if (input$select == "Hierarchical") return ("Hierarchical Segmentation -  Summary")
+      #else if (input$select == "Model Based") return ("Model Based Cluster -  Summary")
+      else if (input$select == "K-Means") return ("K-Means Cluster -  Summary")
+      else if (input$select == "Hierarchical") return ("Hierarchical Cluster -  Summary")
       else return (NULL)
     })
     
@@ -316,8 +316,15 @@ shinyServer(function(input, output){
       })
     })
     
+    output$downloadData <- downloadHandler(
+      filename = function() { "clustercalifhouse.csv" },
+      content = function(file) {
+        write.csv(read.csv("data/clustercalifhouse.csv"), file, row.names=F, col.names=F)
+      }
+    )
+    
     output$downloadData4 <- downloadHandler(
-      filename = function() { "segmentation.csv" },
+      filename = function() { "cluster_output.csv" },
       content = function(file) {
       write.csv(t0(), file, row.names=F)
       }

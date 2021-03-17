@@ -5,8 +5,8 @@ account: iids
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3713642
-bundleId: 4284540
+bundleId: 4335690
 url: https://isb-iids.shinyapps.io/network-analysis/
-when: 1614584000.73599
+when: 1615555901.71921
 asMultiple: FALSE
 asStatic: FALSE

@@ -5,8 +5,8 @@ account: iids
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3507013
-bundleId: 4328966
+bundleId: 4352698
 url: https://isb-iids.shinyapps.io/binary-logit/
-when: 1615435370.00956
+when: 1615897461.69116
 asMultiple: FALSE
 asStatic: FALSE

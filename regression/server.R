@@ -139,7 +139,7 @@ Dataset.Predict <- reactive({
 out = reactive({
 data = mydata()
 Missing1=(data[!complete.cases(data),])
-Missing=(Missing1)
+Missing=head(Missing1)
 mscount=nrow(Missing1)
 Dimensions = dim(data)
 Head = head(data)
@@ -397,33 +397,40 @@ output$validation = renderPrint({
     out
 })
 
-output$datatable = renderTable({
-  if (is.null(input$file)) {return(NULL)}
-  else {
-  Y.hat = ols()$fitted.values
-  data.frame(Y.hat,mydata())
-  }
-})
-
-inputprediction = reactive({
-  val = predict(ols(),Dataset())
-  out = data.frame(Yhat = val, Dataset())
-})
-
 prediction = reactive({
   val = predict(ols(),Dataset.Predict())
-  out = data.frame(Yhat = val, pred.readdata())
+  out = data.frame(Yhat = val, Dataset.Predict())
 })
-
-output$inputprediction =  renderPrint({
-  if (is.null(input$filep)) {return(NULL)}
-  head(inputprediction(),10)
-})
-
 output$prediction =  renderPrint({
   if (is.null(input$filep)) {return(NULL)}
   head(prediction(),10)
 })
+
+output$prediction <- renderDataTable({
+  if (is.null(input$filep)) {return(NULL)}
+  else {
+    prediction()
+  }
+}, options = list(lengthMenu = c(5, 30, 50,100), pageLength = 30))
+
+inputprediction = reactive({
+  val = predict(ols(),Dataset())
+  out = data.frame(Yhat = val, mydata())
+})
+
+output$inputprediction =  renderPrint({
+  if (is.null(input$file)) {return(NULL)}
+  head(inputprediction(),10)
+})
+
+output$inputprediction <- renderDataTable({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    inputprediction()
+  }
+}, options = list(lengthMenu = c(5, 30, 50,100), pageLength = 30))
+
+
 
 #------------------------------------------------#
 output$downloadData1 <- downloadHandler(
@@ -434,11 +441,12 @@ output$downloadData1 <- downloadHandler(
   }
 )
 output$downloadData <- downloadHandler(
-  filename = function() { "califhouse.csv" },
+  filename = function() { "regcalifhouse.csv" },
   content = function(file) {
-    write.csv(read.csv("data/califhouse.csv"), file, row.names=F, col.names=F)
+    write.csv(read.csv("data/regcalifhouse.csv"), file, row.names=F, col.names=F)
   }
 )
+
 output$downloadData2 <- downloadHandler(
   filename = function() { "Input Data With Prediction.csv" },
   content = function(file) {

@@ -5,8 +5,8 @@ account: iids
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3695406
-bundleId: 4278031
+bundleId: 4352783
 url: https://isb-iids.shinyapps.io/js-map/
-when: 1614404665.78712
+when: 1615898587.17312
 asMultiple: FALSE
 asStatic: FALSE

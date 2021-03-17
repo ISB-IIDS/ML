@@ -50,6 +50,62 @@ output$colList <- renderUI({
 # output$table22 <- renderTable ({ 
 #   round(cor(Dataset()),2) 
 #                                       })
+
+out = reactive({
+  data = filtered_dataset()
+  Missing1=(data[!complete.cases(data),])
+  Missing=head(Missing1)
+  mscount=nrow(Missing1)
+  Dimensions = dim(data)
+  Head = head(data)
+  Tail = tail(data)
+  Class = NULL
+  for (i in 1:ncol(data)){
+    c1 = class(data[,i])
+    Class = c(Class, c1)
+  }
+  
+  nu = which(Class %in% c("numeric","integer"))
+  fa = which(Class %in% c("factor","character"))
+  nu.data = data[,nu] 
+  fa.data = data[,fa] 
+  Summary = list(Numeric.data = round(stat.desc(nu.data)[c(4,5,6,8,9,12,13),] ,4), factor.data = describe(fa.data))
+  # Summary = list(Numeric.data = round(stat.desc(nu.data)[c(4,5,6,8,9,12,13),] ,4), factor.data = describe(fa.data))
+  
+  a = seq(from = 0, to=200,by = 4)
+  j = length(which(a < ncol(nu.data)))
+  out = list(Dimensions = Dimensions,Summary =Summary ,Tail=Tail,fa.data,nu.data,a,j, Head=Head,MissingDataRows=Missing,missing.data.rows.count=mscount)
+  return(out)
+})
+
+output$missing = renderPrint({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    out()[9]
+  }
+})
+
+output$head = renderPrint({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    out()[8]
+  }
+})
+
+output$mscount = renderPrint({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    out()[10]
+  }
+})
+
+output$summary = renderPrint({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    out()[1:2]
+  }
+})
+
 output$corplot = renderPlot({
   if (is.null(input$file)) { return(NULL) }
     else{

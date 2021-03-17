@@ -156,7 +156,7 @@ ui <- fluidPage(  tagList(
                                                       h4("Stats after imputation"),
                                                       dataTableOutput("int_replacement"),
                                                       hr(),
-                                                      h4("sample dataset after imputation"),
+                                                      h4("Sample dataset after imputation"),
                                                       dataTableOutput("int_imp"),
                                                       #h4("Missing Values Imputed for categorical variables"),
                                                       #dataTableOutput("cat_imp")
@@ -215,7 +215,7 @@ ui <- fluidPage(  tagList(
                                                         value = TRUE
                                           ),
                                           hr(),
-                                          helpText("Removes the first dummy and keep only n-1 dummies."),
+                                          helpText("Remove the first dummy and keep only n-1 dummies."),
                                           checkboxInput("rem_first_dum","Remove first dummy",
                                                         value = FALSE),
                                           hr(),

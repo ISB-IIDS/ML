@@ -77,27 +77,26 @@ shinyServer(function(input, output,session) {
   })
   
   
-  y_col <- reactive({
+  y_col <- reactive({if(is.null(dataset())){
+    return(NULL)
+  }else{
     x <- match(input$x,cols())
     y_col <- cols()[-x]
     return(y_col)
-    
+    }
     })
   
   output$id_var <- renderUI({
     print(cols())
     selectInput("x","Select ID Column",choices = cols())
-  })
+    })
   
   
   output$doc_var <- renderUI({
     selectInput("y","Select Text Column",choices = y_col())
-  })
+    })
   
- 
-  
-  
-  dtm_tcm =  eventReactive(input$apply,{
+   dtm_tcm =  eventReactive(input$apply,{
     
     textb = dataset()[,input$y]
     ids = dataset()[,input$x]
@@ -198,10 +197,12 @@ shinyServer(function(input, output,session) {
   })
   
   
-  output$idf_table <- renderDataTable({
-    
+  output$idf_table <- renderDataTable({if(is.null(dataset())){
+    return(NULL)
+  }else{
     temp <- ordered_dtm_idf()[1:10,1:10]
     #  temp <- tem[1:10,1:10]
+    }
     return(temp)
     
     # a = colSums(mat1)  # collect colsums into a vector obj a
@@ -213,10 +214,12 @@ shinyServer(function(input, output,session) {
   
   
   
-  output$dtm_table <- renderDataTable({
-    
+  output$dtm_table <- renderDataTable({if(is.null(dataset())){
+    return(NULL)
+  }else{
     temp <- ordered_dtm()[1:10,1:10]
     #  temp <- tem[1:10,1:10]
+  }
     return(temp)
     
     # a = colSums(mat1)  # collect colsums into a vector obj a
@@ -432,27 +435,33 @@ shinyServer(function(input, output,session) {
   })
   
   
-  output$dtm_text <- renderText({
+  output$dtm_text <- renderText({if(is.null(dataset())){
+    return(NULL)
+  }else{
     size = dim(ordered_dtm())
     dtm_size = paste("DTM has  ", size[1],"(rows)"," X ", size[2],"(columns)","")
-    
+  }
     
   })
   
   
   
-  output$tfidf_text <- renderText({
+  output$tfidf_text <- renderText({if(is.null(dataset())){
+    return(NULL)
+  }else{
     size = dim(ordered_dtm_idf())
     dtm_size = paste("TF-IDF has  ", size[1],"(rows)"," X ", size[2],"(columns)","")
-    
+  }
     
   })
   
   
-  output$bi_text <- renderText({
+  output$bi_text <- renderText({if(is.null(dataset())){
+    return(NULL)
+  }else{
     size = dim(bigram_data())
     dtm_size = paste("Bi-gram corpus has  ", size[1],"(rows)"," X ", size[2],"(columns)","")
-    
+  }
     
   })
   
@@ -497,12 +506,7 @@ shinyServer(function(input, output,session) {
   
   
   
-  
-  
-  
-  
-  
-  output$download_bigram <- downloadHandler(
+   output$download_bigram <- downloadHandler(
     filename = function() { paste(str_split(input$file$name,"\\.")[[1]][1],"_bigram_corpus.csv",collapse = " ") },
     content = function(file) {
       write.csv(bigram_data(), file,row.names=FALSE)

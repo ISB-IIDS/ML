@@ -41,46 +41,52 @@ tabPanel("Overview",
 # marketing, product management, operations research, and other applied sciences that deal with large quantities of data.",align="justify"),
 # a(href="http://en.wikipedia.org/wiki/Factor_analysis","- Wikipedia"),
 h4(p("How to use this shiny application")),
-p("This shiny application require one data input from the user. To do so, click on the Browse (in left side-bar panel) and upload the csv data input file.
+p("This shiny application requires one data input from the user. To do so, click on 'Browse' (in left side-bar panel) and upload the csv data input file.
   Note that this application can read only csv file(comma delimited file), so if you don't have csv input data file, first convert your data in csv format 
   and then proceed. Make sure you have top row as variable names and first column as respondent id/name in csv file",align="justify"),
 p("Once csv file is uploaded successfully, application will fit a factor model with optimal factors from parallel Analysis and various 
-results will be showed in the above tabs. In left-side bar panel you can change the parameters value and correspondingly new results 
-  will be showed.",align="justify"),
-#br(),
+results will be showed in the above tabs. In the panel on the left, you can change the parameters' value and correspondingly new results.",align="justify"),
+
 #h4(p("Download Sample Input File")),
-#downloadButton('downloadData', 'Download Example file'),
+downloadButton('downloadData', 'download sample data'),
 #p("Please note that download will not work with RStudio interface. Download will work only in web-browsers. So open this app in a web-browser and then download the example file. For opening this app in web-browser click on \"Open in Browser\" as shown below -"),
 #img(src = "example1.png") #, height = 280, width = 400
 
 ),
     
-                tabPanel("Summary",
+                tabPanel("Data Summary",h4("Selected Variables"), verbatimTextOutput("head"),#verbatimTextOutput("tail"),
+                         h4("Data Summary of Selected Varaibles"),verbatimTextOutput("summary"),h4("Missing Data"),
+                         verbatimTextOutput("missing"),br()),
+                tabPanel("Model Summary",         
+                          br(),
+                         (p('Remove missing data variable(s) is any- check "Data Summary" tab',style="color:red")),
                          (h4(p("Correlation"))),
                          (plotOutput("corplot",height = 850, width = 850)),
                          (h4(p("Test Summary"))),(textOutput("text1")),(textOutput("text2")),(textOutput("text3")),
                          (h4(p("Factors Loadings Summary"))),
                           (verbatimTextOutput("mat")),
-                         
+                          br(),
                          (h4(p("Uniqueness table - "))),
-                         (dataTableOutput("uni")),
+                         (dataTableOutput("uni")),br(),br(),
 #                          (textOutput("text4")),
-                         plotOutput("plot1",height = 600, width = 850)),
-                tabPanel("Loadings",dataTableOutput("loadings")),
+                         plotOutput("plot1",height = 600, width = 850),br(),br()),
+                tabPanel("Loadings",br(),dataTableOutput("loadings"),br(),br()),
                 
 #                tabPanel("Scores",tableOutput("scores")),   # origi code
                 # my edits 16-9-2017 below:
                 tabPanel("Scores", 	# tab name
 	                      br(),
+	                      (p('Remove missing data variable(s) if any- check "Data Summary" tab',style="color:red")),
+	                      (verbatimTextOutput("mscount")),
                         downloadButton('downloadDataX', 
-		                        'Download Factor Scores File (Works only in browser)'), 
+		                        'download factor scores file'), 
 	                      br(),br(),
 	                      dataTableOutput("scores")),
                 
                 tabPanel("Factor vs Variables",plotOutput("plot20",height = 600, width = 850)),
                 tabPanel("Factor vs Variables 2",plotOutput("plot2",height = 600, width = 850)),
                 tabPanel("Factor vs Users",plotOutput("plot3",height = 600, width = 850)),
-                tabPanel("Data",dataTableOutput("table")) 
+                tabPanel("Data",br(),dataTableOutput("table"),br(),br()) 
     )
   ) 
 ) 

@@ -68,7 +68,7 @@ output$yvarselect <- renderUI({
   if (is.null(input$file1)) { return(NULL) }
   else{
   
-  selectInput("colattr", "Select Color variable",
+  selectInput("colattr", "Select color variable",
               colnames(Dataset2()[-1]), colnames(Dataset2())[1])
   }
 })

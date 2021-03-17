@@ -21,13 +21,13 @@ fluidPage(
   # Input in sidepanel:
   sidebarPanel(
     h4(p("Data Input")),
-    fileInput("file", "Upload Adjacency Matrix (csv file with header)"),
-    fileInput("file1", "Upload Demographics data (csv file with header)"),
-    selectInput("mode","Mode of Graph",c("directed", "undirected","max", "min", "upper",
+    fileInput("file", "Upload 'Adjacency Matrix' (csv file with header)"),
+    fileInput("file1", "Upload optional 'Demographics Data' (csv file with header)"),
+    # htmlOutput("yvarselect"),
+    selectInput("mode","Mode of graph",c("directed", "undirected","max", "min", "upper",
                                          "lower", "plus"),"undirected"),
     # selectInput("comm","Find Communities",c("Yes", "No"),"No"),
-    htmlOutput("yvarselect"),
-    selectInput("cex2", "Vertex Size based on", c("Degree","Betweeness","Closeness"),"Degree"),
+    selectInput("cex2", "Vertex size based on", c("Degree","Betweeness","Closeness"),"Degree"),
     sliderInput("cex", "Increase vertex size by", min = 20,  max = 100, value = 50,round = FALSE),
     
     br(),
@@ -46,13 +46,12 @@ fluidPage(
                             h4(p(tags$b("Data Input"))),
                             
                             p("This shiny application requires following two different types of data input from the users"),
-                            
                             tags$b("1. Adjacency Matrix"),
                             p("It represents the relationship between the nodes & input file looks like"),
                             
                             img(src = "input_adj.png", height = 180, width = 400),
-                            tags$br(),
-                           # downloadButton('downloadData', 'Download Example adjacecny matrix file'),
+                            tags$br(),br(),
+                            downloadButton('downloadData', 'Download example adjacecny matrix file'),
                             
                             tags$br(),
                             tags$br(),
@@ -60,8 +59,8 @@ fluidPage(
                             p("It represents demographic data of individual nodes & input file looks like"),
                             
                             img(src = "input_demo.png", height = 180, width = 400),
-                            tags$br(),
-                            #downloadButton('downloadData2', 'Download Example demographic file'),
+                            tags$br(),br(),
+                            downloadButton('downloadData2', 'Download example demographic file'),
                             tags$br(),
                             tags$br(),
                          
@@ -77,7 +76,7 @@ fluidPage(
                          
                 ),
                 #
-                tabPanel('Network Plot',
+                tabPanel('Network Plot',br(),htmlOutput("yvarselect"),
                          plotOutput("graph1", height = 800, width = 840),
                          visNetworkOutput('int_net',width = '800px',height = '600px')),
                 #tabPanel("Network Plot",plotOutput("graph1", height = 800, width = 840)),

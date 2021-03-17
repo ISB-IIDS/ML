@@ -15,8 +15,8 @@ if (!require("klaR")) {install.packages("klaR")}
 library(shiny)
 library(pastecs)
 library(RColorBrewer)
-library(Hmisc)
 library(ggplot2)
+library(Hmisc)
 library(reshape2)
 library(corrplot)
 library(hydroGOF)
@@ -45,7 +45,7 @@ output$yvarselect <- renderUI({
   if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
   if (is.null(input$file)) {return(NULL)}
   else {
-  selectInput("yAttr", "Select class/segment variable (factor/categorical)",
+  selectInput("yAttr", "Select Y variable (must be factor/categorical)",
                      colnames(Dataset()), colnames(Dataset())[1])
   }
 })
@@ -110,7 +110,7 @@ pred.readdata = reactive({
 out = reactive({
 data = mydata()
 Missing1=(data[!complete.cases(data),])
-Missing=(Missing1)
+Missing=head(Missing1)
 mscount=nrow(Missing1)
 Dimensions = dim(data)
 Head = head(data)
@@ -248,10 +248,39 @@ output$olssummary = renderPrint({
   }
 })
 
+output$confusion = renderPrint({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    data = mydata()#/meanstd()[[2]]-meanstd()[[1]]  
+    predictions <- predict(ols(),data) 
+    class.pred = predictions$class
+    class=mydata()[,input$yAttr]
+    confusion_matrix = table(class,class.pred)
+    accuracy = (sum(diag(confusion_matrix))/sum(confusion_matrix))
+    out = list(Confusion_matrix = confusion_matrix, Accuracy_of_Validation = accuracy)
+    return(out)
+    }
+})
+
 output$resplot1 = renderPlot({
   if (is.null(input$file)) {return(NULL)}
   else {
-  plot(ols())
+    lda.data <- cbind(mydata(), predict(ols())$x)
+    col=paste("color","=",input$yAttr)
+    if (length(lda.data$LD2) >0){
+    ggplot(lda.data, aes(LD1, LD2)) +
+      geom_point(aes(colour = mydata()[,input$yAttr]), size = 3)}
+  }
+})
+
+output$resplot2 = renderPlot({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    lda.data <- cbind(mydata(), predict(ols())$x)
+    col=paste("color","=",input$yAttr)
+    if (length(lda.data$LD3) >0){
+    ggplot(lda.data, aes(LD1, LD3)) +
+      geom_point(aes(colour = mydata()[,input$yAttr]), size = 3)}
   }
 })
 
@@ -260,8 +289,9 @@ output$resplot3 = renderPlot({
   else {
    lda.data <- cbind(mydata(), predict(ols())$x)
    col=paste("color","=",input$yAttr)
-   ggplot(lda.data, aes(LD1, LD2)) +
-     geom_point(aes(colour = mydata()[,input$yAttr]), size = 3)  
+   if (length(lda.data$LD3) >0){
+   ggplot(lda.data, aes(LD2, LD3)) +
+     geom_point(aes(colour = mydata()[,input$yAttr]), size = 3)} 
   }
 })
 
@@ -277,7 +307,14 @@ output$datatable = renderTable({
   }
 })
 
-inputprediction = reactive({
+output$datatable <- renderDataTable({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    datatable()
+  }
+}, options = list(lengthMenu = c(5, 30, 50,100), pageLength = 30))
+
+datatable = reactive({
   if (is.null(input$file)) {return(NULL)}
   else {
   data = mydata()#/meanstd()[[2]]-meanstd()[[1]]
@@ -292,7 +329,7 @@ inputprediction = reactive({
 output$datatablep = renderTable({
   if (is.null(input$filep)) {return(NULL)}
   else {
-    data = mydata()#/meanstd()[[2]]-meanstd()[[1]]
+    data = pred.readdata()#/meanstd()[[2]]-meanstd()[[1]]
     predictions <- predict(ols(),data) 
     Class = predictions$class
     Prob = predictions$posterior
@@ -300,10 +337,17 @@ output$datatablep = renderTable({
   }
 })
 
-prediction = reactive({
+output$datatablep <- renderDataTable({
   if (is.null(input$filep)) {return(NULL)}
   else {
-  data = mydata()#/meanstd()[[2]]-meanstd()[[1]]
+    datatablep()
+  }
+}, options = list(lengthMenu = c(5, 30, 50,100), pageLength = 30))
+
+datatablep = reactive({
+  if (is.null(input$filep)) {return(NULL)}
+  else {
+  data = pred.readdata()#/meanstd()[[2]]-meanstd()[[1]]
   predictions <- predict(ols(),data) 
   Class = predictions$class
   Prob = predictions$posterior

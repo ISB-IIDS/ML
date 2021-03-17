@@ -31,9 +31,9 @@ shinyUI(fluidPage(
                            ", align = "Justify"),
                          img(src = "dataset.png",height = 180, width = 400),
                          hr(),
-                       #  h4(p("Download Sample text file")),
+                         h4(p("Download sample text file")),
                          
-                       #  downloadButton('downloadData1', 'Download Sample Input file'),br(),br(),
+                         downloadButton('downloadData1', 'Download sample Input file'),br(),br(),
                         # p("Please note that download will not work with RStudio interface. Download will work only in web-browsers. So open this app in a web-browser and then download the example file. For opening this app in web-browser click on \"Open in Browser\" as shown below -"),
                        #  img(src = "example1.png")
                          #, height = 280, width = 400

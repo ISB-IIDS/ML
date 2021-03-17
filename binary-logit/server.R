@@ -1,5 +1,5 @@
 #################################################
-#      Summary & GLM App                      #
+#      Summary & Binary App                      #
 #################################################
 if(!require("shiny")) {install.packages("shiny")}
 if(!require("pastecs")){install.packages("pastecs")}
@@ -14,6 +14,7 @@ if (!require("Rfast")) {install.packages("Rfast")}
 if (!require("e1071")) {install.packages("e1071")}
 
 library(shiny)
+library(e1071)
 library(pastecs)
 library(RColorBrewer)
 library(Hmisc)
@@ -23,7 +24,7 @@ library(corrplot)
 library(ROCR)
 library(caret)
 library(Rfast)
-library(e1071)
+
 
 # library(gplot)
 
@@ -51,7 +52,7 @@ output$yvarselect <- renderUI({
   if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
   if (is.null(input$file)) {return(NULL)}
   else {
-  selectInput("yAttr", "Select Y variable (must be binary 0/1 variable)",
+  selectInput("yAttr", "Select Y variable (must be numerical binary variable)",
                      colnames(Dataset()), colnames(Dataset())[1])
   }
 })
@@ -93,7 +94,7 @@ output$fxvarselect <- renderUI({
 
 mydata = reactive({
   mydata = Dataset()[,c(input$yAttr,input$xAttr)]
-
+  mydata[,input$yAttr] = factor(mydata[,input$yAttr])
   if (length(input$fxAttr) >= 1){
   for (j in 1:length(input$fxAttr)){
       mydata[,input$fxAttr[j]] = factor(mydata[,input$fxAttr[j]])
@@ -119,7 +120,7 @@ Dataset.Predict <- reactive({
 out = reactive({
 data = mydata()
 Missing1=(data[!complete.cases(data),])
-Missing=(Missing1)
+Missing=head(Missing1)
 mscount=nrow(Missing1)
 Dimensions = dim(data)
 Head = head(data)
@@ -208,6 +209,26 @@ output$mscount = renderPrint({
   }
 })
 
+output$correlation = renderPrint({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    cor(out()[[5]], use = "pairwise.complete.obs")
+  }
+})
+
+output$corplot = renderPlot({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    my_data = out()[[5]]
+    cor.mat <- round(cor(my_data),2)
+    corrplot(cor.mat, 
+             type = "upper",    # upper triangular form
+             order = "hclust",  # ordered by hclust groups
+             tl.col = "black",  # text label color
+             tl.srt = 45)  
+  }
+})
+
 output$datatable = renderTable({
   if (is.null(input$file)) {return(NULL)}
   else {
@@ -216,21 +237,11 @@ output$datatable = renderTable({
   }
 }, options = list(lengthMenu = c(10, 20, 50), pageLength = 10)  )
 
-inputpredicted = reactive({
-  val = predict(ols(),Dataset(), type='response')
-  out = data.frame(Y.Prob = val, Dataset())
-})
-
-predicted = reactive({
-  val = predict(ols(),Dataset.Predict(), type='response')
-  out = data.frame(Y.Prob = val, pred.readdata())
-})
-
 output$validation = renderPrint({
   if (is.null(input$file)) {return(NULL)}
-    y_actual = Dataset()[,input$yAttr]
-    yhat_predicted = as.integer(ols()$fitted.values>0.5)
-    confusion_matrix = table(yhat_predicted,y_actual)
+    y_actual = mydata()[,input$yAttr]
+    y_predicted = as.integer(ols()$fitted.values>0.5)
+    confusion_matrix = table(y_predicted,y_actual)
     accuracy = (sum(diag(confusion_matrix))/sum(confusion_matrix))
     out = list(Confusion_matrix = confusion_matrix, Accuracy_Hit_Rate = accuracy)
     out
@@ -240,8 +251,10 @@ output$confusionmatrix = renderPrint({
   if (is.null(input$file)) {return(NULL)}
   else {
   data.fit = as.integer(ols()$fitted.values>input$cutoff)
-  data.act = (Dataset()[,input$yAttr])
-  confusionMatrix(as.factor(data.fit),as.factor(data.act))
+  data.act = (mydata()[,input$yAttr])
+  Confusion_Matrix = confusionMatrix(as.factor(data.fit),as.factor(data.act))
+  #out=list(Sum_Specificity_Senstivity=Confusion_Matrix['Senstivity']+Confusion_Matrix['Specificity'], Confusion_Matrix=Confusion_Matrix)
+  Confusion_Matrix  
   }
 })
 
@@ -249,26 +262,62 @@ output$confusionmatrix = renderPrint({
 output$roc = renderPlot({ 
   if (is.null(input$file)) {return(NULL)}
   else {
-  pred.val = predict(ols(),Dataset(),type="response")
-  pred.lm = prediction(pred.val,Dataset()[,input$yAttr])
+  pred.val = predict(ols(),mydata(),type="response")
+  pred.lm = ROCR::prediction(pred.val, mydata()[,input$yAttr])
   perf.lm = performance(pred.lm,"tpr", "fpr")
   #roc_graph<-cbind(perf.lm@x.values[[1]],perf.lm@y.values[[1]],perf.lm@alpha.values[[1]]);
   #write.csv(roc_graph, file="roc_graph1.csv")
   auc_ROCR = performance(pred.lm, measure = "auc")
-  plot(perf.lm, main = c("AUC", auc_ROCR@y.values[[1]]))
+  plot(perf.lm, main = c("AUC", auc_ROCR@y.values[[1]]), 
+       xlab="False Positive Rate (1-Specificity)", ylab="True Positive Rate (Sensitivity)" )
   #lines(x = c(0,1), y = c(0,1))
   abline(a=0,b=1)
+ #abline(a=1,b=-1)
   }
 })
 
+
+prediction = reactive({
+  val = predict(ols(),Dataset.Predict(), type='response')
+  out = data.frame(Y.Prob = val, Dataset.Predict())
+})
 output$prediction =  renderPrint({
   if (is.null(input$filep)) {return(NULL)}
-  head(predicted(),10)
+  head(prediction(),10)
+})
+
+output$prediction <- renderDataTable({
+  if (is.null(input$filep)) {return(NULL)}
+  else {
+    prediction()
+  }
+}, options = list(lengthMenu = c(5, 30, 50,100), pageLength = 30))
+
+
+inputprediction = reactive({
+  val = predict(ols(),mydata(), type='response')
+  out = data.frame(Y.Prob = val, mydata())
 })
 
 output$inputprediction =  renderPrint({
   if (is.null(input$file)) {return(NULL)}
-  head(inputpredicted(),10)
+  head(inputprediction(),10)
+})
+
+output$inputprediction <- renderDataTable({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    inputprediction()
+  }
+}, options = list(lengthMenu = c(5, 30, 50,100), pageLength = 30))
+
+output$resplot3 = renderPlot({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    plot(ols()$fitted.values,mydata()[,input$yAttr],main="Predicted vs. Actual Y", 
+         xlab="Predicted Y", ylab="Actual Y", col=round(ols()$fitted.values>input$cutoff,0)+1  ) 
+    #abline(0,1)  
+  }
 })
 
 #------------------------------------------------#
@@ -280,9 +329,9 @@ output$downloadData1 <- downloadHandler(
   }
 )
 output$downloadData <- downloadHandler(
-  filename = function() { "pregnancy.csv" },
+  filename = function() { "mTitanicAll.csv" },
   content = function(file) {
-    write.csv(read.csv("data/pregnancy.csv"), file, row.names=F, col.names=F)
+    write.csv(read.csv("data/mTitanicAll.csv"), file, row.names=F, col.names=F)
   }
 )
 output$downloadData2 <- downloadHandler(

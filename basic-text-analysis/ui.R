@@ -35,6 +35,7 @@ shinyUI(fluidPage(
     #
     htmlOutput("pre_proc1"),
     htmlOutput("pre_proc2"),
+    actionButton(inputId = "apply",label = "Apply Changes", icon("refresh")),br(),br(),
     sliderInput("freq", "Minimum Frequency in Wordcloud:", min = 0,  max = 100, value = 2),
     
     sliderInput("max",  "Maximum Number of Words in Wordcloud:", min = 1,  max = 300,  value = 50),  
@@ -45,10 +46,7 @@ shinyUI(fluidPage(
     
     textInput("concord.word",('Enter word for which you want to find concordance'),value = 'good'),
     checkboxInput("regx","Check for regex match"),
-    sliderInput("window",'Concordance Window',min = 2,max = 100,5),
-    
-    
-    actionButton(inputId = "apply",label = "Apply Changes", icon("refresh"))
+    sliderInput("window",'Concordance Window',min = 2,max = 100,5)
     
   ),
   
@@ -58,19 +56,20 @@ shinyUI(fluidPage(
                 #
                 tabPanel("Overview & Example Dataset",h4(p("How to use this App")),
                          
-                         p("To use this app you need a document corpus in txt file format. Make sure each document is separated from another document with a new line character.
-                           To do basic Text Analysis in your text corpus, click on Browse in left-sidebar panel and upload the txt file. Once the file is uploaded it will do the computations in 
-                            back-end with default inputs and accordingly results will be displayed in various tabs.", align = "justify"),
-                         p("If you wish to change the input, modify the input in left side-bar panel and click on Apply changes. Accordingly results in other tab will be refreshed
+                         h5("To use this app you need a document corpus in txt file format."),
+                         h5("Make sure each document is separated from another document with a new line character."),
+                         p("To do basic 'text analysis' in your text corpus, click on Browse in left-sidebar panel and upload the txt file. Once the file is uploaded it will do the computations in 
+                            back-end with default inputs and accordingly results will be displayed in various tabs.
+                            If you wish to change the input, modify the input in left side-bar panel and click on 'Apply Changes'. Accordingly results in other tab will be refreshed
                            ", align = "Justify"),
-                         h5("Note"),
-                         p("You might observe no change in the outputs after clicking 'Apply Changes'. Wait for few seconds. As soon as all the computations
+                         actionButton(inputId = "apply",label = "Apply Changes", icon("refresh")),
+                         h5("Note: You might observe no change in the outputs after clicking 'Apply Changes'. Wait for few seconds. As soon as all the computations
                            are over in back-end results will be refreshed",
                            align = "justify"),
                          #, height = 280, width = 400
-                        # br(),
-                        # h4(p("Download Sample text file")),
-                        # downloadButton('downloadData1', 'Download Nokia Lumia reviews txt file'),br(),br(),
+                         br(),
+                         h4(p("Download sample text file")),
+                         downloadButton('downloadData1', 'download "Nokia Lumia" reviews'),br(),br(),
                        #  p("Please note that download will not work with RStudio interface. Download will work only in web-browsers. So open this app in a web-browser and then download the example file. For opening this app in web-browser click on \"Open in Browser\" as shown below -"),
                        #  img(src = "example1.png")
                 )
@@ -133,19 +132,19 @@ shinyUI(fluidPage(
                          h4("Download DTM"),
                          #h3("-------------"),
                          verbatimTextOutput("dtm_text"),
-                         downloadButton('download_dtm', 'Download DTM'),br(),
+                         downloadButton('download_dtm', 'download DTM'),br(),
                         
                          
                          h3("-----------------------------------------------------"),
                          h4("Download TF-IDF"),
                          verbatimTextOutput("tfidf_text"),
-                         downloadButton('download_tfidf', 'Download TF-IDF'),br(),
+                         downloadButton('download_tfidf', 'download TF-IDF'),br(),
                          
                          
                          h3("-----------------------------------------------------"),
                          h4("Download Bigram Corpus"),
                          verbatimTextOutput("bi_text"),
-                         downloadButton("download_bigram","Download Bigram Corpus"))
+                         downloadButton("download_bigram","download bigram corpus"))
                           
           
                 

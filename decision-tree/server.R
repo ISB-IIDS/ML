@@ -39,7 +39,7 @@ shinyServer(function(input, output,session) {
 
   # Select variables:
   output$yvarselect <- renderUI({
-    if (is.null(input$file)) {return(NULL)}
+    if (identical(readdata(), '') || identical(readdata(),data.frame())) return(NULL)
     if (is.null(input$file)) {return(NULL)}
     else {
     selectInput("yAttr", "Select Y variable (Is it is a categorical variable? mark it as factor variable)",
@@ -57,7 +57,7 @@ shinyServer(function(input, output,session) {
       })
 
   readdata.temp = reactive({
-    mydata = readdata()[,c(input$yAttr,input$xAttr)]
+    mydata = readdata()[,c(input$xAttr)]
   })
 
   nu.Dataset = reactive({
@@ -72,14 +72,24 @@ shinyServer(function(input, output,session) {
     return(nu.data)
   })  
   
+  
+  output$fyvarselect <- renderUI({
+    if (identical(readdata(), '') || identical(readdata(),data.frame())) return(NULL)
+    if (is.null(input$file)) {return(NULL)}
+    else {
+      checkboxGroupInput("fyAttr", "Select if Y is a factor (categorical) variable",
+                         input$yAttr,"")
+    }
+  })
     
   output$fxvarselect <- renderUI({
     if (identical(readdata.temp(), '') || identical(readdata.temp(),data.frame())) return(NULL)
     if (is.null(input$file)) {return(NULL)}
     else {
-    checkboxGroupInput("fxAttr", "Select factor (categorical) variables",
-                     #  colnames(readdata.temp()),"" )
-                        colnames(readdata.temp()),setdiff(colnames(readdata.temp()),c(colnames(nu.Dataset()))) )
+    checkboxGroupInput("fxAttr", "Select factor (categorical) X variables",
+                     colnames(readdata.temp()),
+                     #setdiff(colnames(readdata.temp()),input$yAttr),
+                     setdiff(colnames(readdata.temp()),c(colnames(nu.Dataset()))) )
                     #  setdiff(colnames(Dataset.temp()),input$yAttr),setdiff(colnames(Dataset.temp()),c(input$yAttr,colnames(nu.Dataset()))) )
     }
   })
@@ -87,7 +97,8 @@ shinyServer(function(input, output,session) {
   
   Dataset = reactive({
     mydata = readdata()[,c(input$yAttr,input$xAttr)]
-    
+    if (length(input$yAttr) == length(input$fyAttr)) { mydata[,input$yAttr] = as.factor(mydata[,input$yAttr]) }
+   # if (is.factor(readdata()[,c(input$yAttr)])) { mydata[,input$yAttr] = as.factor(mydata[,input$yAttr]) }
     if (length(input$fxAttr) >= 1){
       for (j in 1:length(input$fxAttr)){
         mydata[,input$fxAttr[j]] = as.factor(mydata[,input$fxAttr[j]])
@@ -106,7 +117,7 @@ shinyServer(function(input, output,session) {
   out = reactive({
     data = Dataset()
     Missing1=(data[!complete.cases(data),])
-    Missing=(Missing1)
+    Missing=head(Missing1)
     mscount=nrow(Missing1)
     Dimensions = dim(data)
     Head = head(data)
@@ -232,6 +243,10 @@ shinyServer(function(input, output,session) {
   ## mean predictions
   
   if (class(train_data()[,c(input$yAttr)]) == "factor"){
+  fcptable <- rpart(as.formula(paste(y, paste( x, collapse = ' + '), sep=" ~ ")),
+                    cp = 0,
+                    method="class",   # use "class" for classification trees
+                    data=train_data())$cptable
   fit.rt <- rpart(as.formula(paste(y, paste( x, collapse = ' + '), sep=" ~ ")),
                   cp = input$cp,
                   #method="class",   # use "class" for classification trees
@@ -239,9 +254,14 @@ shinyServer(function(input, output,session) {
   pr <- as.party(fit.rt)    # thus, we use same object 'rp' from the raprt package
   val1 = predict(pr, newdata = test_data(),type="response")
   val = predict(pr, newdata = train_data(),type="response")
+  val2 = predict(pr, newdata = Dataset(),type="response")
   imp = round(fit.rt$variable.importance/sum(fit.rt$variable.importance),2)
   
   } else {
+  fcptable <- rpart(as.formula(paste(y, paste( x, collapse = ' + '), sep=" ~ ")),
+                    cp = 0,
+                    #  method="anova",   # use "class" for classification trees
+                    data=train_data())$cptable
   fit.rt <- rpart(as.formula(paste(y, paste( x, collapse = ' + '), sep=" ~ ")),
                   cp = input$cp,
                 #  method="anova",   # use "class" for classification trees
@@ -249,10 +269,11 @@ shinyServer(function(input, output,session) {
   pr <- as.party(fit.rt)    # thus, we use same object 'rp' from the raprt package
    val1 = predict(pr, newdata = test_data())
    val = predict(pr, newdata = train_data())
+   val2 = predict(pr, newdata = Dataset())
    imp = round(fit.rt$variable.importance/sum(fit.rt$variable.importance),2)
   }
   
-  out = list(model = fit.rt, validation = val, imp = imp, validation1=val1, cptable=fit.rt$cptable)
+  out = list(model = fit.rt, validation = val, imp = imp, validation1=val1, fcptable=fcptable, validation2=val2)
     })
   
 #-------------------------------------
@@ -272,7 +293,7 @@ shinyServer(function(input, output,session) {
       
     }
     
-    out = data.frame(Yhat = val3, pred.readdata())
+    out = data.frame(Yhat = val3, Dataset.Predict())
     return(out)    
     
   })
@@ -292,22 +313,52 @@ shinyServer(function(input, output,session) {
       
     }
     
-    out = data.frame(Yhat = val3, readdata())
+    out = data.frame(Yhat = val3, Dataset())
     return(out)    
     
   })
+  
+  output$prediction =  renderPrint({
+    if (is.null(input$filep)) {return(NULL)}
+    head(prediction(),10)
+  })
+  output$predictionorg =  renderPrint({
+    if (is.null(input$filep)) {return(NULL)}
+    head(predictionorg(),10)
+  })  
+  
+  output$prediction <- renderDataTable({
+    if (is.null(input$filep)) {return(NULL)}
+    else {
+      prediction()
+    }
+  }, options = list(lengthMenu = c(5, 30, 50,100), pageLength = 30))
+  
+  output$predictionorg <- renderDataTable({
+    if (is.null(input$file)) {return(NULL)}
+    else {
+      predictionorg()
+    }
+  }, options = list(lengthMenu = c(5, 30, 50,100), pageLength = 30))
+  
+  
+  
+  
 #---------------------------------------------------------------  
   
   output$cpselect = renderPrint({
     if (is.null(input$file)) {return(NULL)}
     else {
-      bigtree <- fit.rt()$cptable
+      bigtree <- fit.rt()$fcptable
       min.x <- which.min(bigtree[, 4]) #column 4 is xerror
       msl=bigtree[min.x, 4] + bigtree[min.x, 5]
-      ssl=bigtree[min.x, 4] - bigtree[min.x, 5]
+      #ssl=bigtree[min.x, 4] - bigtree[min.x, 5]
       kk=nrow(bigtree)
-      #for(i in 1:kk) { if (bigtree[i, 4] < msl) {optcp=bigtree[i,1]}  }
-      return(list(smallest_cp=ssl,largest_cp=msl)) #column 5: xstd, column 1: cp
+      for(i in 1:min.x) { 
+        if (bigtree[i, 4] <= msl) {mcp=bigtree[i,1];i=kk}
+        #if (bigtree[i, 4] > ssl) {scp=bigtree[i,1]}
+        }
+      return(list(largest_cp=mcp)) #column 5: xstd, column 1: cp
     }
   })
   
@@ -320,11 +371,11 @@ shinyServer(function(input, output,session) {
       yhat = fit.rt()$validation1
     confusion_matrix = table(y,yhat)
     accuracy = (sum(diag(confusion_matrix))/sum(confusion_matrix))
-    out = list(Confusion_matrix_of_Validation = confusion_matrix, Accuracy_of_Validation = accuracy)
+    out = list(Confusion_matrix_of_Test_Data = confusion_matrix, Model_Accuracy = accuracy)
     } else {
     dft = data.frame(scale(data.frame(y = test_data()[,input$yAttr], yhat = fit.rt()$validation1)))
     mse.y = mse(dft$y,dft$yhat)
-    out = list(Mean_Square_Error_of_Standardized_Response_in_Test_Data = mse.y)
+    out = list(Standardized_Mean_Square_Error = mse.y)
     } 
     out
        })
@@ -337,11 +388,28 @@ shinyServer(function(input, output,session) {
       yhat = fit.rt()$validation
       confusion_matrix = table(y,yhat)
       accuracy = (sum(diag(confusion_matrix))/sum(confusion_matrix))
-      out = list(Confusion_matrix_of_Validation = confusion_matrix, Accuracy_of_Validation = accuracy)
+      out = list(Confusion_matrix_of_Training_Data = confusion_matrix, Model_Accuracy = accuracy)
     } else {
       dft = data.frame(scale(data.frame(y = train_data()[,input$yAttr], yhat = fit.rt()$validation)))
       mse.y = mse(dft$y,dft$yhat)
-      out = list(Mean_Square_Error_of_Standardized_Response_in_Training_Data = mse.y)
+      out = list(Standardized_Mean_Square_Error = mse.y)
+    } 
+    out
+  })
+  
+  output$validation2 = renderPrint({
+    if (is.null(input$file)) {return(NULL)}
+    
+    if (class(Dataset()[,c(input$yAttr)]) == "factor"){
+      y = Dataset()[,input$yAttr]
+      yhat = fit.rt()$validation2
+      confusion_matrix = table(y,yhat)
+      accuracy = (sum(diag(confusion_matrix))/sum(confusion_matrix))
+      out = list(Confusion_matrix_of_Input_Data = confusion_matrix, Model_Accuracy = accuracy)
+    } else {
+      dft = data.frame(scale(data.frame(y = Dataset()[,input$yAttr], yhat = fit.rt()$validation2)))
+      mse.y = mse(dft$y,dft$yhat)
+      out = list(Standardized_Mean_Square_Error = mse.y)
     } 
     out
   })
@@ -395,7 +463,8 @@ shinyServer(function(input, output,session) {
          filename = "",   # will print to console
          use.n = FALSE,
          compress = TRUE,
-         title = title1) 
+         title = title1
+        ) 
     
   })
   
@@ -409,7 +478,8 @@ shinyServer(function(input, output,session) {
        filename = "",   # will print to console
        use.n = TRUE,
        compress = TRUE,
-       title = title1) 
+       title = title1
+      ) 
   })
   
   
@@ -459,14 +529,7 @@ shinyServer(function(input, output,session) {
     }
   )  
 
-  output$prediction =  renderPrint({
-    if (is.null(input$filep)) {return(NULL)}
-    head(prediction(),10)
-  })
-  output$predictionorg =  renderPrint({
-    if (is.null(input$filep)) {return(NULL)}
-    head(predictionorg(),10)
-  })  
+
   #------------------------------------------------#
   output$downloadData0 <- downloadHandler(
     filename = function() { "Predicted Data.csv" },

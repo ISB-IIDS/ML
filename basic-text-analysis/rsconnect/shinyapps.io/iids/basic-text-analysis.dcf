@@ -5,8 +5,8 @@ account: iids
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3713560
-bundleId: 4284111
+bundleId: 4352767
 url: https://isb-iids.shinyapps.io/basic-text-analysis/
-when: 1614577633.66426
+when: 1615898384.21287
 asMultiple: FALSE
 asStatic: FALSE
