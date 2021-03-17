@@ -202,7 +202,7 @@ plot_data = reactive({
 output$heatmap1 = renderPlot({ 
   if (is.null(input$file)) {return(NULL)}
   else {
-  chart.Correlation(plot_data(),hitogram=TRUE)
+  chart.Correlation(plot_data(),hitogram=TRUE,pch="+")
   }
 })
 
@@ -210,6 +210,14 @@ output$bplot = renderPlot({
   if (is.null(input$file)) {return(NULL)}
   else {
     boxplot(out()[[5]])
+  }
+})
+
+output$sbplot = renderPlot({ 
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    sout= scale(out()[[5]], center = T, scale = T)
+    boxplot(sout)
   }
 })
 
@@ -258,12 +266,12 @@ output$downloadDatanew <- downloadHandler(
   }
 )
 
-output$dummydata = renderPrint({
+output$dummydata = renderDataTable({
   if (is.null(input$file)) {return(NULL)}
   else {
-    head(dummy_cols(mydata()), 10)
+    dummy_cols(mydata())
   }
-})
+}, options = list(lengthMenu = c(5, 30, 50,100), pageLength = 30))
 
 output$downloadData <- downloadHandler(
   filename = function() { "califhouse.csv" },

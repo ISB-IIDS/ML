@@ -58,7 +58,7 @@ shinyUI(pageWithSidebar(
                          (p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")),
                          h4("Correlation Visulization - Input Data"),plotOutput("corplot"),br()
                          ),
-                tabPanel("Standardized OLS", h4("Summary Standardized Input Data (mean=0 var=1)"),verbatimTextOutput("summarystd"),
+                tabPanel("Standardized OLS", h4("Summary Standardized Input Data (mean=0 variance=1)"),verbatimTextOutput("summarystd"),
                          h4("OLS Standardized Input Data"), verbatimTextOutput("olssummarystd")),
                 tabPanel("Input Data with Predictions", 
                          h4("Download input data with predicted Y values"),

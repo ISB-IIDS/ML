@@ -37,12 +37,12 @@ try(require("partykit")||install.packages("partykit"))
 try(require("fmsb")||install.packages("fmsb"))
 try(require("PerformanceAnalytics")||install.packages("PerformanceAnalytics"))
 
-if (!require("randomcoloR")) {install.packages("randomcoloR")}
-if (!require("shinyWidgets")) {install.packages("shinyWidgets")}
-if (!require("stringr")) {install.packages("stringr")}
-if (!require("e1071")) {install.packages("e1071")}
-if (!require("EnvStats")) {install.packages("EnvStats")}
-if (!require("fastDummies")) {install.packages("fastDummies")}
+if(!require("randomcoloR")) {install.packages("randomcoloR")}
+if(!require("shinyWidgets")) {install.packages("shinyWidgets")}
+if(!require("stringr")) {install.packages("stringr")}
+if(!require("e1071")) {install.packages("e1071")}
+if(!require("EnvStats")) {install.packages("EnvStats")}
+if(!require("fastDummies")) {install.packages("fastDummies")}
 if(!require("maptpx")) {install.packages("maptpx")}
 if(!require("nFactors")) {install.packages("nFactors")}
 if(!require("qgraph")) {install.packages("qgraph")}
@@ -54,6 +54,7 @@ if(!require("ggbiplot")) {install_github("vqv/ggbiplot")}
 if(!require("plyr")) {install.packages("plyr")}
 if(!require("scales")) {install.packages("scales")}
 if(!require("grid")) {install.packages("grid")}
+if(!require("ggpubr")) {install.packages("ggpubr")}
 if(!require("cluster")) {install.packages("cluster")}
 if(!require("mclust")) {install.packages("mclust")}
 if(!require("MASS")) {install.packages("MASS")}

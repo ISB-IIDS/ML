@@ -42,27 +42,28 @@ shinyUI(pageWithSidebar(
                          ),
                 tabPanel("Data Summary",h4("Selected Variables"), verbatimTextOutput("head"),#verbatimTextOutput("tail"),
                          h4("Data Summary of Selected Variables"),verbatimTextOutput("summary")),
-                tabPanel("Missing Data", h4("Missing Data Rows"),verbatimTextOutput("missing")),
+                tabPanel("Missing Data", h4("Missing Data Rows"),verbatimTextOutput("missing"),verbatimTextOutput("mscount")),
                 tabPanel("Correlation",
-                          h4("Correlation Table"), verbatimTextOutput("correlation"),verbatimTextOutput("mscount"),
+                          h4("Correlation Table"), verbatimTextOutput("correlation"),
                          (p('Remove missing data variable(s) if any - check  "Missing Data" tab',style="color:red")),
-                          h4("Correlation Visulization"),
-                          plotOutput("corplot"),h4("Visulizing Correlation Matrix"),plotOutput("corplot1",width = 500)),
+                          h4("Correlation Visulization"),p(plotOutput("corplot"),align="left"),
+                         h4("Visulizing Correlation Matrix"),plotOutput("corplot1",width = 500)),
                           
-                tabPanel("Box Plot", h4("Box Plots"),plotOutput("bplot")),
-                tabPanel("Data Visulization",
-                         h4("Randomly select 500 rows from input data - if less than 500 rows in dataset, select whole dataset"),plotOutput("heatmap1")),
+                tabPanel("Box Plot", h4("Box Plots"),plotOutput("bplot"),br(),br(),
+                         h4("Box Plots of Scaled Data (mean=0, vairance=1)"),plotOutput("sbplot")),
+                tabPanel("Data Visulization",br(),
+                         h4("Randomly select 500 rows from the input data - if less than 500 rows in a dataset, select all rows")
+                         ,plotOutput("heatmap1")),
                 tabPanel("Outliers",
                          h4("Select variable for Rosner's outlier test"),
-                         htmlOutput("outselect"), 
-                         plotOutput("hist"),
+                         htmlOutput("outselect"),plotOutput("hist"),
                          verbatimTextOutput("outlier")),
                 tabPanel("Data with Dummy Variables",
                          h4(p("Download input data with dummy variable columns added for factor (categorical) variables")),
-                         downloadButton('downloadDatanew', 'download input data with dummy variables'),  
-                         h5("First 10 rows of input data with dummy variable coding for factor/categorical variables"),
-                         verbatimTextOutput("dummydata"),
-                         br(),br()   )
+                         downloadButton('downloadDatanew', 'download input data with dummy variables'), br(), br(),
+                         #h5("First 10 rows of input data with dummy variable coding for factor/categorical variables"),
+                         dataTableOutput("dummydata"),tags$head(tags$style("tfoot {display: table-header-group;}")),br(),br()
+                         )
                 )
       ) 
     ) 
