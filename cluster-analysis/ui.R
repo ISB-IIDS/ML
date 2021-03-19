@@ -17,7 +17,7 @@ shinyUI(fluidPage(
     fileInput("file", "Upload data (csv file with header)"),
     selectInput("select", "Choose cluster algorithm", 
                        c("K-Means","Hierarchical"), selected = "K-Means"),
-    numericInput("Clust", "Choose number of clusters",2,10,2),br(),
+    numericInput("Clust", "Choose number of clusters",2),br(),
     h4(p("Data Selection")),
     htmlOutput("xvarselect"),
     br(),
