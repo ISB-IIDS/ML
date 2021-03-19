@@ -45,8 +45,9 @@ shinyUI(pageWithSidebar(
                 tabPanel("Missing Data", h4("Missing Data Rows"),verbatimTextOutput("missing"),verbatimTextOutput("mscount")),
                 tabPanel("Correlation",
                           h4("Correlation Table"), verbatimTextOutput("correlation"),
+                         h4("Correlation Visulization"),
                          (p('Remove missing data variable(s) if any - check  "Missing Data" tab',style="color:red")),
-                          h4("Correlation Visulization"),p(plotOutput("corplot"),align="left"),
+                         p(plotOutput("corplot"),align="left"),
                          h4("Visulizing Correlation Matrix"),plotOutput("corplot1",width = 500)),
                           
                 tabPanel("Box Plot", h4("Box Plots"),plotOutput("bplot"),br(),br(),

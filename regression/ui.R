@@ -55,8 +55,10 @@ shinyUI(pageWithSidebar(
                 tabPanel("Summary OLS",  
                          h4("Summary OLS Model"),verbatimTextOutput("olssummary"),
                          h4("Correlation Table"),verbatimTextOutput("correlation"),
+                         
+                         h4("Correlation Visulization - Input Data"),
                          (p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")),
-                         h4("Correlation Visulization - Input Data"),plotOutput("corplot"),br()
+                         plotOutput("corplot"),br()
                          ),
                 tabPanel("Standardized OLS", h4("Summary Standardized Input Data (mean=0 variance=1)"),verbatimTextOutput("summarystd"),
                          h4("OLS Standardized Input Data"), verbatimTextOutput("olssummarystd")),

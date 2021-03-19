@@ -211,12 +211,12 @@ shinyServer(function(input, output) {
   # Show table:
   output$plot1 = renderPlot({  
     
-    # if (is.null(input$file))
+     if (is.null(input$file)){}
     #   return(NULL)
     # 
     # if (is.null(input$file1))
     #   return(NULL)
-    
+    else {
     mydata2 = read.csv(input$file$datapath ,header=TRUE)
     row.names(mydata2) = mydata2[,1];
     mydata2 = mydata2[,2:ncol(mydata2)]; 
@@ -224,7 +224,7 @@ shinyServer(function(input, output) {
     mydata2 = mydata2[,input$Attr]
     fit = prcomp(mydata2) # extract prin compts
     plot(fit, "Variance of PCA")
-    
+    }
   })
   
   output$spiderplot = renderPlot({  

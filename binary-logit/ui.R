@@ -58,11 +58,13 @@ shinyUI(pageWithSidebar(
                 tabPanel("Data Summary",h4("Selected Variables"), verbatimTextOutput("head"),#verbatimTextOutput("tail"),
                          h4("Data Summary of Selected X Variables"),verbatimTextOutput("summary"),
                          h4("Missing Data Rows"),verbatimTextOutput("missing")),
-                tabPanel("Summary Logit", br(), (p('Y must be numerical binary variable',style="color:red")),
+                tabPanel("Summary Logit", br(), (p('Y must be numerical binary (0/1) variable ',style="color:red")),
                          h4("Summary Logistic Regression Model"),verbatimTextOutput("olssummary"),
                          h4("Correlation Table"),verbatimTextOutput("correlation"),
+                         
+                         h4("Correlation Visulization - Input Data"),
                          (p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")),
-                         h4("Correlation Visulization - Input Data"),plotOutput("corplot")
+                         plotOutput("corplot")
                          #h4('Confusion Matrix'), verbatimTextOutput("validation")),
                          #h4("Summary OLS standardized model"), verbatimTextOutput("olssummarystd")),
                          ),

@@ -87,8 +87,10 @@ shinyUI(pageWithSidebar(
                          (p('Select alternative-specific X variables and individual-specific X variables appropriately.',style="color:red")),
                          h4("Model Summary"),verbatimTextOutput("olssummary"),
                          h4("Correlation Table"),verbatimTextOutput("correlation"),
+                         
+                         h4("Correlation Visulization - Input Data"),
                          (p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")),
-                         h4("Correlation Visulization - Input Data"),plotOutput("corplot")
+                         plotOutput("corplot")
                          ),
               #  tabPanel("Correlation",h4("Correlation Table"), verbatimTextOutput("correlation"),h4("Correlation"),plotOutput("corplot")),
                  tabPanel("Prediction Probablities", 

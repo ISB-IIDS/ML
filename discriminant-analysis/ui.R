@@ -64,8 +64,10 @@ shinyUI(pageWithSidebar(
                 tabPanel("Discriminant Analysis",br(), (p('Y must be factor (categorical) variable',style="color:red")),
                          h4("Summary Discrimant Model"),verbatimTextOutput("olssummary"),
                          h4("Correlation Table - Input data"), verbatimTextOutput("correlation"),
+                         
+                         h4("Correlation Visulization - Input Data"),
                          (p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")),
-                         h4("Correlation Visulization - Input Data"),plotOutput("corplot"),br()
+                         plotOutput("corplot"),br()
                          ),
                          
                 tabPanel("Input Data with Predictions", 
