@@ -13,10 +13,11 @@ shinyUI(fluidPage(
   # Input in sidepanel:
   sidebarPanel(
     h4(p("Data Input")),
-    fileInput("file", "Upload data, first column must be observation id (csv file with header)"),
+    p("First column of the input data must be an obervation id.",style="color:red"),
+    fileInput("file", "Upload data (csv file with header)"),
     selectInput("select", "Choose cluster algorithm", 
                        c("K-Means","Hierarchical"), selected = "K-Means"),
-    numericInput("Clust", "Choose number of clusters", 2),
+    numericInput("Clust", "Choose number of clusters", 2),br(),
     h4(p("Data Selection")),
     htmlOutput("xvarselect"),
     br(),
@@ -37,7 +38,7 @@ shinyUI(fluidPage(
                            align="justify"),
                          tags$a(href="https://en.wikipedia.org/wiki/Cluster_analysis", "-Wikipedia"),
                          h4(p("Data input")),
-                         p("First column of the input data must be an obervation id.",style="color:red"),
+                         #p("First column of the input data must be an obervation id.",style="color:red"),
                          p("This application requires input data from the user in csv format. To upload data, click on the 'Browse' (in the panel on the the left) 
                          and upload the Segmentation data input file.
                             Note that this application can read only csv file(comma delimited file), so if you don't have csv input data file, first convert your data in csv format 
@@ -57,42 +58,43 @@ shinyUI(fluidPage(
                 tabPanel("Data Summary",
                          #h4("select only numerical variables with no missing values in X and click 'Refresh' "), 
                          #verbatimTextOutput("tail"),
-                         br(), (p('First column of the input data must be an observation id',style="color:red")),
+                         #br(), (p('First column of the input data must be an observation id',style="color:red")),
                          h4("Selected Variables"), verbatimTextOutput("head"),
-                         (p("Click refresh after loading data and every time you make changes",style="color:red")),
+                         h3(p("Click refresh after loading data and every time you make changes",style="color:red")),
                          submitButton(text = "refresh", icon("refresh")),
-                         
-                         h4("Data Summary of Selected X"),verbatimTextOutput("summ"),
-                         h4("Missing data rows"),verbatimTextOutput("missing")),
-                
-                #tabPanel("Data",h3(textOutput("caption"),tableOutput("table"))),
+                         h4("Data Summary of Selected X"),verbatimTextOutput("summ")
+                         ),
+
+                tabPanel("Missing Data",verbatimTextOutput("mscount"),
+                         h4(p('Remove missing data variable(s), if any, by unchecking it in the "Data Selection" panel on the left, and click refresh.',style="color:red")),
+                         submitButton(text = "refresh",icon("refresh")),
+                         h4("Missing Data"),verbatimTextOutput("missing")),
                 
                 tabPanel("Cluster Analysis",br(),
-                         p("Input data is standardized before running cluster analysis.", style="color:red"),
+                         p("Input data is standardized before running cluster analysis.", style="color:black"),
                          h4("Summary Standardize Data"),
                          verbatimTextOutput("scldt"),
-                         (p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")),
-                         
-                         p("Select X data with only numerical varaibles"),
-                         p("Choose cluster algorithm (default clusters = 2)"),
-                         p("Click 'refresh' and wait for algorithm to finish estimation"),
+                         p("Step1: Choose cluster algorithm (default clusters = 2)"),
+                         p("Step2: Select only numerical X variables in the 'Data Selection' panel on the left."),
+                         (p('Step3: Examine  "Missing Data" tab and uncheck missing data variable(s), if any, in the "Data Selection" panel on the left.',style="color:black")),
+                         p("Step4: Click 'refresh' and wait for algorithm to finish estimation."),
                          submitButton(text = "refresh", icon("refresh")),
                          plotOutput("plotpca",height = 400),
                          h4(textOutput("caption1")),verbatimTextOutput("summary"), br(), br()),
                 
                 tabPanel("Cluster Plot",br(), 
-                         (p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")),
-                         verbatimTextOutput("mscount"),
-                         p("Select X data with only numerical varaibles"),
-                         p("Choose cluster algorithm (default clusters = 2)"),
-                         p("Click 'refresh' and wait for algorithm to finish estimation"),
+                         p("Step1: Choose cluster algorithm (default clusters = 2)"),
+                         p("Step2: Select only numerical X variables in the 'Data Selection' panel on the left."),
+                         (p('Step3: Examine  "Missing Data" tab and uncheck missing data variable(s), if any, in the "Data Selection" panel on the left.',style="color:black")),
+                         p("Step4: Click 'refresh' and wait for algorithm to finish estimation."),
                          submitButton(text = "refresh", icon("refresh")),
                          plotOutput("plot"), br()  ),   #,width = 400)),
                 tabPanel("Download Cluster Membership Data",
                          h4("Download Cluster Membership Data"),
-                         downloadButton('downloadData4', 'download membership data'), br(),
-                         h4("Click 'refresh' and wait for algorithm to finish estimation"),
-                         submitButton(text = "refresh", icon("refresh")),br(),
+                         downloadButton('downloadData4', 'download membership data'), br(),br(),
+                         #submitButton(text = "refresh", icon("refresh")),
+                         #(p('Examine  "Missing Data" tab and uncheck missing data variable(s), if any, in the "Data Selection" panel on the left',style="color:red")),
+                         #h4("Click 'refresh' and wait for algorithm to finish estimation"),
                          dataTableOutput("table"),tags$head(tags$style("tfoot {display: table-header-group;}")),
                         br(),br()  )
                 

@@ -68,7 +68,7 @@ shinyServer(function(input, output){
   out = reactive({
     data = mydata()
     Missing1=(data[!complete.cases(data),])
-    Missing=head(Missing1)
+    Missing=(Missing1)
     mscount=nrow(Missing1)
     Dimensions = dim(data)
     Head = head(Dataset())
