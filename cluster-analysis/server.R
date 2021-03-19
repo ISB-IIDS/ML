@@ -60,13 +60,8 @@ shinyServer(function(input, output){
     }
   })
 
-  mydata = reactive({
-   mydata = Dataset()[,c(input$xAttr)]
-  return(mydata)
- })
-  
   out = reactive({
-    data = mydata()
+    data = Dataset()[,c(input$xAttr)]
     Missing1=(data[!complete.cases(data),])
     Missing=(Missing1)
     mscount=nrow(Missing1)
@@ -91,11 +86,18 @@ shinyServer(function(input, output){
   })
   
   Dataset2 = reactive({
-    x0 = mydata()
-    x01 = scale(x0, center = T, scale = T)
+    x00 = out()[[6]]
+    x0 = x00[,c(input$xAttr)]
+    x01 = scale(x0, scale = T)
     dstd = data.frame(x01)
     #colnames(dstd) = c(colnames(x01))
     return(dstd)
+  })
+  
+  mydata = reactive({
+    x00 = out()[[6]]
+    x0 = x00[,c(input$xAttr)]
+    return(x0)
   })
   
   output$head = renderPrint({
@@ -108,7 +110,7 @@ shinyServer(function(input, output){
   output$scldt = renderPrint({
     if (is.null(input$file)) {return(NULL)}
     else {
-      data=Dataset2()
+      data=Dataset2()[,c(input$xAttr)]
       Class = NULL
       for (i in 1:ncol(data)){
         c1 = class(data[,i])
@@ -116,9 +118,9 @@ shinyServer(function(input, output){
       }
       
       nu = which(Class %in% c("numeric","integer"))
-      fa = which(Class %in% c("factor","character"))
+      #fa = which(Class %in% c("factor","character"))
       nu.data = data[,nu] 
-      fa.data = data[,fa] 
+      #fa.data = data[,fa] 
       summary = list(standardize.data = round(stat.desc(nu.data)[c(4,5,6,8,9,12,13),] ,5))
       list(note="data is 'mean-centered' and 'scaled' for cluster analysis", summary=summary)
     }
@@ -317,16 +319,16 @@ shinyServer(function(input, output){
     })
     
     output$downloadData <- downloadHandler(
-      filename = function() { "clustercalifhouse.csv" },
+      filename = function() { "wholesalecustomerdata.csv" },
       content = function(file) {
-        write.csv(read.csv("data/clustercalifhouse.csv"), file, row.names=F, col.names=F)
+        write.csv(read.csv("data/wholesalecustomerdata.csv"), file, row.names=F, col.names=F)
       }
     )
     
     output$downloadData4 <- downloadHandler(
       filename = function() { "cluster_output.csv" },
       content = function(file) {
-      write.csv(t0(), file, row.names=F)
+      write.csv(t0()[[1]], file, row.names=F)
       }
       
     )

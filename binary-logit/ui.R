@@ -89,7 +89,7 @@ shinyUI(pageWithSidebar(
                # tabPanel("Correlation",h4("Correlation Table - Input data"), verbatimTextOutput("correlation"),
                #          h4("Correlation Visulization - Input Data"),plotOutput("corplot")),
                 tabPanel("Cutoff and ROC", 
-                         h4("Suggested Cutoff Probability: Choose Cutoff to Maximize Sensitivity + Specificity"),
+                         h4("Suggested Optimal Cutoff Probability: Choose Cutoff to Maximize, Sensitivity + Specificity"),
                          sliderInput('cutoff','Cutoff Probability',0,1,0.5),
                          (p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")),verbatimTextOutput("mscount"),
                          (p('Y must be numerical binary variable',style="color:red")),

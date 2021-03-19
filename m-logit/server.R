@@ -133,6 +133,7 @@ library(e1071)
   
   out = reactive({
     data = mydata()
+    #data = dataforsummary()
     Missing1=(data[!complete.cases(data),])
     Missing=head(Missing1)
     mscount=nrow(Missing1)
@@ -147,7 +148,8 @@ library(e1071)
     
     nu = which(Class %in% c("numeric","integer"))
     fa = which(Class %in% c("factor","character"))
-    nu.data = data[,nu] 
+    
+    nu.data = data[,nu]
     fa.data = data[,fa] 
     Summary = list(Numeric.data = round(stat.desc(nu.data)[c(4,5,6,8,9,12,13),] ,4), factor.data = describe(fa.data))
     # Summary = list(Numeric.data = round(stat.desc(nu.data)[c(4,5,6,8,9,12,13),] ,4), factor.data = describe(fa.data))

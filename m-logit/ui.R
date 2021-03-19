@@ -81,10 +81,10 @@ shinyUI(pageWithSidebar(
                          h4("Data Summary of Selected X Variables"),verbatimTextOutput("summary"),h4("Missing Data Rows"),verbatimTextOutput("missing")),
                 tabPanel("Model Output",
                          #h4("Select Base Alternative"),
+                         br(),htmlOutput("BaseAlternativeselect"),
+                         (p('Step1: Make sure you have selected the correct choice/outcome variable under "Data Selection" options in the left panel. It should be 0/1 vector',style="color:black")),
+                         (p('Step2: Select alternative-specific X variables and individual-specific X variables appropriately.',style="color:black")),
                          br(),
-                         (p('Make sure you have selected the correct choice/outcome variable under "Data Selection" Options in the left tab. It should be 0/1 vector',style="color:red")),
-                         htmlOutput("BaseAlternativeselect"),
-                         (p('Select alternative-specific X variables and individual-specific X variables appropriately.',style="color:red")),
                          h4("Model Summary"),verbatimTextOutput("olssummary"),
                          h4("Correlation Table"),verbatimTextOutput("correlation"),
                          
