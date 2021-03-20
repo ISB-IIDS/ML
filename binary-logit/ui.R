@@ -58,7 +58,7 @@ shinyUI(pageWithSidebar(
                 tabPanel("Data Summary",h4("Selected Variables"), verbatimTextOutput("head"),#verbatimTextOutput("tail"),
                          h4("Data Summary of Selected X Variables"),verbatimTextOutput("summary"),
                          h4("Missing Data Rows"),verbatimTextOutput("missing")),
-                tabPanel("Summary Logit", br(), (p('Y must be numerical binary (0/1) variable ',style="color:red")),
+                tabPanel("Summary Logit", br(), h4(p('Y must be binary variable ',style="color:red")),
                          h4("Summary Logistic Regression Model"),verbatimTextOutput("olssummary"),
                          h4("Correlation Table"),verbatimTextOutput("correlation"),
                          
@@ -92,7 +92,7 @@ shinyUI(pageWithSidebar(
                          h4("Suggested Optimal Cutoff Probability: Choose Cutoff to Maximize, Sensitivity + Specificity"),
                          sliderInput('cutoff','Cutoff Probability',0,1,0.5),
                          (p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")),verbatimTextOutput("mscount"),
-                         (p('Y must be numerical binary variable',style="color:red")),
+                         (p('Y must be binary variable',style="color:red")),
                          h4("Confusion Matrix Summary"),verbatimTextOutput("confusionmatrix"),
                          #h4("Fitted Values vs Y - Input Data"),
                          plotOutput("resplot3"),
@@ -118,7 +118,21 @@ shinyUI(pageWithSidebar(
                          # verbatimTextOutput('prediction'),
                          # h4("Download new data with predictions"),
                          # downloadButton('downloadData1', 'download predictions for new data')      
-                         ) 
+                         ),
+               tabPanel("Class Visualization",br(),
+                        numericInput("perp", "Set Perplexity Parameter",25 ,min=5,max=95, step=10),
+                        numericInput("iter", "Set Max Iterations",500, min=500, max=5000, step=500),
+                        h4(p('Note: projecting numerical input data in two dimensions; it takes a while, be patient.',style="color:red")),
+                        #h4("Visualizing Data in 2 Dimensions (it takes quite a while, be paitent)."),
+                        tags$a(href="https://en.wikipedia.org/wiki/T-distributed_stochastic_neighbor_embedding", "-Wikipedia"),br(),
+                        br(),
+                        #(p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")),
+                        #verbatimTextOutput("dup"),
+                        plotOutput("resplot4",height = 800)
+                        #plotOutput("resplot5",height = 800),
+                        #plotOutput("resplot6",height = 800)
+               )
+               
                 )
       ) 
     ) 

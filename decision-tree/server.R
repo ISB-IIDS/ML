@@ -57,7 +57,7 @@ shinyServer(function(input, output,session) {
       })
 
   readdata.temp = reactive({
-    mydata = readdata()[,c(input$xAttr)]
+    mydata = readdata()[,c(input$xAttr,input$yAttr)]
   })
 
   nu.Dataset = reactive({
@@ -78,7 +78,7 @@ shinyServer(function(input, output,session) {
     if (is.null(input$file)) {return(NULL)}
     else {
       checkboxGroupInput("fyAttr", "Select if Y is a factor (categorical) variable",
-                         input$yAttr,"")
+                         input$yAttr,setdiff(colnames(readdata.temp()),c(input$xAttr,colnames(nu.Dataset()))))
     }
   })
     
@@ -87,9 +87,9 @@ shinyServer(function(input, output,session) {
     if (is.null(input$file)) {return(NULL)}
     else {
     checkboxGroupInput("fxAttr", "Select factor (categorical) X variables",
-                     colnames(readdata.temp()),
-                     #setdiff(colnames(readdata.temp()),input$yAttr),
-                     setdiff(colnames(readdata.temp()),c(colnames(nu.Dataset()))) )
+                     #colnames(readdata.temp()),
+                     setdiff(colnames(readdata.temp()),input$yAttr),
+                     setdiff(colnames(readdata.temp()),c(input$yAttr,colnames(nu.Dataset()))) )
                     #  setdiff(colnames(Dataset.temp()),input$yAttr),setdiff(colnames(Dataset.temp()),c(input$yAttr,colnames(nu.Dataset()))) )
     }
   })

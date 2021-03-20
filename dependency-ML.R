@@ -37,6 +37,7 @@ try(require("partykit")||install.packages("partykit"))
 try(require("fmsb")||install.packages("fmsb"))
 try(require("PerformanceAnalytics")||install.packages("PerformanceAnalytics"))
 
+if(!require("Rtsne")) {install.packages("Rtsne")}
 if(!require("randomcoloR")) {install.packages("randomcoloR")}
 if(!require("shinyWidgets")) {install.packages("shinyWidgets")}
 if(!require("stringr")) {install.packages("stringr")}

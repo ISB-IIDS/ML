@@ -12,6 +12,8 @@ if (!require("ROCR")) {install.packages("ROCR")}
 if (!require("caret")) {install.packages("caret")}
 if (!require("Rfast")) {install.packages("Rfast")}
 if (!require("e1071")) {install.packages("e1071")}
+if (!require("Rtsne")) {install.packages("Rtsne")}
+if (!require("fastDummies")) {install.packages("fastDummies")}
 
 library(shiny)
 library(e1071)
@@ -24,7 +26,8 @@ library(corrplot)
 library(ROCR)
 library(caret)
 library(Rfast)
-
+library(Rtsne)
+library(fastDummies)
 
 # library(gplot)
 
@@ -52,7 +55,7 @@ output$yvarselect <- renderUI({
   if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
   if (is.null(input$file)) {return(NULL)}
   else {
-  selectInput("yAttr", "Select Y variable (must be numerical binary variable)",
+  selectInput("yAttr", "Select Y variable (must be binary)",
                      colnames(Dataset()), colnames(Dataset())[1])
   }
 })
@@ -93,7 +96,9 @@ output$fxvarselect <- renderUI({
 })
 
 mydata = reactive({
-  mydata = Dataset()[,c(input$yAttr,input$xAttr)]
+  ydata = Dataset()[,c(input$yAttr)]
+  Y=(dummy_cols(ydata))[,3]
+  mydata=cbind(Y, Dataset()[,c(input$yAttr,input$xAttr)])
   mydata[,input$yAttr] = factor(mydata[,input$yAttr])
   if (length(input$fxAttr) >= 1){
   for (j in 1:length(input$fxAttr)){
@@ -133,14 +138,14 @@ for (i in 1:ncol(data)){
 
 nu = which(Class %in% c("numeric","integer"))
 fa = which(Class %in% c("factor","character"))
-nu.data = data[,nu] 
+nu.data = data[,nu]; nu.data = nu.data[,-1]
 fa.data = data[,fa] 
 Summary = list(Numeric.data = round(stat.desc(nu.data)[c(4,5,6,8,9,12,13),] ,4), factor.data = describe(fa.data))
 # Summary = list(Numeric.data = round(stat.desc(nu.data)[c(4,5,6,8,9,12,13),] ,4), factor.data = describe(fa.data))
 
 a = seq(from = 0, to=200,by = 4)
 j = length(which(a < ncol(nu.data)))
-out = list(Dimensions = Dimensions,Summary =Summary ,Tail=Tail,fa.data,nu.data,a,j, Head=Head,MissingDataRows=Missing,missing.data.rows.count=mscount)
+out = list(Dimensions = Dimensions, Summary =Summary, Tail=Tail, fa.data, nu.data, a, j, Head=Head,MissingDataRows=Missing,missing.data.rows.count=mscount)
 return(out)
 })
 
@@ -190,7 +195,7 @@ plot_data = reactive({
 
 ols = reactive({
     rhs = paste(input$xAttr, collapse = "+")
-    formula= as.formula(paste(input$yAttr,"~", rhs , sep=""))
+    formula= as.formula(paste("Y","~", rhs , sep=""))
     ols = glm(formula, data = mydata(), family=binomial)
   return(ols)
 })
@@ -239,7 +244,7 @@ output$datatable = renderTable({
 
 output$validation = renderPrint({
   if (is.null(input$file)) {return(NULL)}
-    y_actual = mydata()[,input$yAttr]
+    y_actual = mydata()[,"Y"]
     y_predicted = as.integer(ols()$fitted.values>0.5)
     confusion_matrix = table(y_predicted,y_actual)
     accuracy = (sum(diag(confusion_matrix))/sum(confusion_matrix))
@@ -251,19 +256,18 @@ output$confusionmatrix = renderPrint({
   if (is.null(input$file)) {return(NULL)}
   else {
   data.fit = as.integer(ols()$fitted.values>input$cutoff)
-  data.act = (mydata()[,input$yAttr])
+  data.act = (mydata()[,"Y"])
   Confusion_Matrix = confusionMatrix(as.factor(data.fit),as.factor(data.act))
   #out=list(Sum_Specificity_Senstivity=Confusion_Matrix['Senstivity']+Confusion_Matrix['Specificity'], Confusion_Matrix=Confusion_Matrix)
   Confusion_Matrix  
   }
 })
 
-
 output$roc = renderPlot({ 
   if (is.null(input$file)) {return(NULL)}
   else {
   pred.val = predict(ols(),mydata(),type="response")
-  pred.lm = ROCR::prediction(pred.val, mydata()[,input$yAttr])
+  pred.lm = ROCR::prediction(pred.val, mydata()[,"Y"])
   perf.lm = performance(pred.lm,"tpr", "fpr")
   #roc_graph<-cbind(perf.lm@x.values[[1]],perf.lm@y.values[[1]],perf.lm@alpha.values[[1]]);
   #write.csv(roc_graph, file="roc_graph1.csv")
@@ -314,9 +318,56 @@ output$inputprediction <- renderDataTable({
 output$resplot3 = renderPlot({
   if (is.null(input$file)) {return(NULL)}
   else {
-    plot(ols()$fitted.values,mydata()[,input$yAttr],main="Predicted vs. Actual Y", 
+    plot(ols()$fitted.values,mydata()[,"Y"],main="Predicted vs. Actual Y", 
          xlab="Predicted Y", ylab="Actual Y", col=round(ols()$fitted.values>input$cutoff,0)+1  ) 
     #abline(0,1)  
+  }
+})
+
+dup = reactive({
+  dup = which(duplicated(out()[[5]]))
+  return(dup)
+})
+
+output$dup =  renderPrint({
+  length(dup())
+})
+
+tsne_df = reactive({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    if (length(dup())==0) {
+      data = out()[[5]]
+      tsne_object = Rtsne(as.matrix(data), perplexity = input$perp, num_threads=0, max_iter=input$iter)
+    }
+    else{
+    dup = dup()
+    data = out()[[5]]
+    tsne_object = Rtsne(as.matrix(data[-dup,]), perplexity = input$perp, num_threads=0, max_iter=input$iter)
+    }
+    tsne_df1 = as.data.frame(tsne_object$Y) 
+    tsne_df = setNames(tsne_df1,c("Dim.1", "Dim.2"))
+    return(tsne_df)
+  }
+  
+})
+
+output$resplot4 = renderPlot({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    
+    dup = dup()
+    tsne_df=tsne_df()
+    if (length(dup())==0) {
+    Y_var=mydata()[,input$yAttr]  
+    ggplot(aes(x = Dim.1, y = Dim.2), data = tsne_df) +
+      geom_point(aes(colour = Y_var), size = 3)
+    }
+    else{
+      Y_var=mydata()[-dup,input$yAttr]
+      ggplot(aes(x = Dim.1, y = Dim.2), data = tsne_df) +
+        geom_point(aes(colour = Y_var), size = 3)
+    }
   }
 })
 

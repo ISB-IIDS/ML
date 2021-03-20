@@ -11,6 +11,7 @@ if (!require("corrplot")) {install.packages("corrplot")}
 if (!require("hydroGOF")) {install.packages("hydroGOF")}
 if (!require("MASS")) {install.packages("MASS")}
 if (!require("klaR")) {install.packages("klaR")}
+if (!require("Rtsne")) {install.packages("Rtsne")}
 
 library(shiny)
 library(pastecs)
@@ -21,6 +22,7 @@ library(reshape2)
 library(corrplot)
 library(hydroGOF)
 library(klaR)
+library(Rtsne)
 
 shinyServer(function(input, output,session) {
   
@@ -262,36 +264,96 @@ output$confusion = renderPrint({
     }
 })
 
+predmydata =  reactive({
+  cbind(mydata(), predict(ols())$x)
+})
+
 output$resplot1 = renderPlot({
   if (is.null(input$file)) {return(NULL)}
   else {
-    lda.data <- cbind(mydata(), predict(ols())$x)
+    if (input$select=="Linear") { 
+    #lda.data <- cbind(mydata(), predict(ols())$x)
+    lda.data = predmydata() 
     col=paste("color","=",input$yAttr)
     if (length(lda.data$LD2) >0){
     ggplot(lda.data, aes(LD1, LD2)) +
       geom_point(aes(colour = mydata()[,input$yAttr]), size = 3)}
+    }
   }
 })
 
 output$resplot2 = renderPlot({
   if (is.null(input$file)) {return(NULL)}
   else {
-    lda.data <- cbind(mydata(), predict(ols())$x)
+    if (input$select=="Linear") { 
+    #lda.data <- cbind(mydata(), predict(ols())$x)
+      lda.data = predmydata()
     col=paste("color","=",input$yAttr)
     if (length(lda.data$LD3) >0){
     ggplot(lda.data, aes(LD1, LD3)) +
       geom_point(aes(colour = mydata()[,input$yAttr]), size = 3)}
+    }
   }
 })
 
 output$resplot3 = renderPlot({
   if (is.null(input$file)) {return(NULL)}
   else {
-   lda.data <- cbind(mydata(), predict(ols())$x)
+    if (input$select=="Linear") { 
+   #lda.data <- cbind(mydata(), predict(ols())$x)
+      lda.data = predmydata()
    col=paste("color","=",input$yAttr)
    if (length(lda.data$LD3) >0){
    ggplot(lda.data, aes(LD2, LD3)) +
      geom_point(aes(colour = mydata()[,input$yAttr]), size = 3)} 
+    }
+  }
+})
+
+dup = reactive({
+  dup = which(duplicated(out()[[5]]))
+  return(dup)
+})
+
+output$dup =  renderPrint({
+  length(dup())
+})
+
+tsne_df = reactive({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    if (length(dup())==0) {
+      data = out()[[5]]
+      tsne_object = Rtsne(as.matrix(data), perplexity = input$perp, num_threads=0, max_iter=input$iter)
+    }
+    else{
+      dup = dup()
+      data = out()[[5]]
+      tsne_object = Rtsne(as.matrix(data[-dup,]), perplexity = input$perp, num_threads=0, max_iter=input$iter)
+    }
+    tsne_df1 = as.data.frame(tsne_object$Y) 
+    tsne_df = setNames(tsne_df1,c("Dim.1", "Dim.2"))
+    return(tsne_df)
+  }
+  
+})
+
+output$resplot4 = renderPlot({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    
+    dup = dup()
+    tsne_df=tsne_df()
+    if (length(dup())==0) {
+      Y_var=mydata()[,input$yAttr]  
+      ggplot(aes(x = Dim.1, y = Dim.2), data = tsne_df) +
+        geom_point(aes(colour = Y_var), size = 3)
+    }
+    else{
+      Y_var=mydata()[-dup,input$yAttr]
+      ggplot(aes(x = Dim.1, y = Dim.2), data = tsne_df) +
+        geom_point(aes(colour = Y_var), size = 3)
+    }
   }
 })
 

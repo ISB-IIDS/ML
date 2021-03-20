@@ -85,9 +85,12 @@ shinyUI(pageWithSidebar(
                          ),
                 
               # tabPanel("MeanStd",h4("Mean and Std"),verbatimTextOutput("meanstd1")),
-                tabPanel("Discriminant Plot",br(),
-                         (p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")),verbatimTextOutput("mscount"),
-                         h4("Class Scatter Plot - Primary Discriminant Dimensions"),
+                tabPanel("Linear Discriminant Plot",br(),
+                         verbatimTextOutput("mscount"),
+                         h4(p('Note: Y must take more than two values to calculate two discriminant axes for 
+                              plotting data (it may take a while for the plot to appear, be patient)',style="color:black")),
+                         #h4("Plotting data on primary linear discriminant axes (calculations may take a while be patient)"),
+                         (p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")),
                          plotOutput("resplot1",height = 800),
                          #h4("Class Scatter Plot - First & Third Discriminant Dimensions"),
                          plotOutput("resplot2",height = 800),
@@ -109,7 +112,19 @@ shinyUI(pageWithSidebar(
                          # ,br(),tableOutput("datatablep"),
                          # h4("Download new data with predictions"),
                          # downloadButton('downloadData1', 'download predictions for new data')      
-                         )
+                         ),
+              tabPanel("Class Visualization",br(),
+                       numericInput("perp", "Set Perplexity Parameter",25 ,min=5,max=95, step=10),
+                       numericInput("iter", "Set Max Iterations",500, min=500, max=5000, step=500),
+                       h4(p('Note: projecting numerical input data in two dimensions; it takes a while, be patient.',style="color:red")),
+                       #h4("Visualizing Data in 2 Dimensions (it takes quite a while, be paitent)."),
+                       tags$a(href="https://en.wikipedia.org/wiki/T-distributed_stochastic_neighbor_embedding", "-Wikipedia"),br(),
+                       br(),
+                       #(p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")),
+                       plotOutput("resplot4",height = 800)
+                       #plotOutput("resplot5",height = 800),
+                       #plotOutput("resplot6",height = 800)
+                      )
                          
                 )
       ) 
