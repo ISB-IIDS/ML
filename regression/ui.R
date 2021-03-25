@@ -20,6 +20,7 @@ shinyUI(pageWithSidebar(
     htmlOutput("xvarselect"),
  #   submitButton(text = "Apply Changes", icon("refresh")),br(),
     htmlOutput("fxvarselect"),
+    htmlOutput("samsel"),
 #   fileInput("filep", "Upload new data for prediction (csv file with header)"),
     br()
   ),
@@ -47,9 +48,11 @@ shinyUI(pageWithSidebar(
                          br()
                           ),
                          
-                tabPanel("Data Summary",h4("Selected Variables"), verbatimTextOutput("head"),#verbatimTextOutput("tail"),
-                         h4("Data Summary of Selected Y and X Varaibles"),verbatimTextOutput("summary"),h4("Missing Data"),
-                          verbatimTextOutput("missing"),br()),
+                tabPanel("Data Summary",#h4("Selected Variables"), verbatimTextOutput("head"),#verbatimTextOutput("tail"),
+                         h4("Uploaded Data"), 
+                         dataTableOutput("readdata"),tags$head(tags$style("tfoot {display: table-header-group;}")),br(),
+                         h4("Data Summary of Selected Y and X Varaibles"),verbatimTextOutput("summary"),
+                         h4("Missing Data"),verbatimTextOutput("missing"),br()),
                # tabPanel("Correlation",h4("Correlation Table - Input data"), 
 
                 tabPanel("Summary OLS",  

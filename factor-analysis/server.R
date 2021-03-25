@@ -2,31 +2,65 @@
 #               Factor Analysis                 #
 #################################################
 if (!require("shiny")) {install.packages("shiny")}
+if (!require("pastecs")){install.packages("pastecs")} #for stat.desc
+if (!require("Hmisc")){install.packages("Hmisc")} # for describe
 if (!require("nFactors")) {install.packages("nFactors")}
 if (!require("qgraph")) {install.packages("qgraph")}
 if (!require("corrplot")) {install.packages("corrplot")}
 if (!require("dplyr")) {install.packages("dplyr")}
 if (!require("DT")) {install.packages("DT")}
 
+
 library("shiny")
+library("pastecs")
 library("nFactors")
 library("qgraph")
 library("corrplot")
 library("dplyr")
 library("DT")
+library("Hmisc")
+
 
 shinyServer(function(input, output) {
 
+  Dataset0 <- reactive({
+    if (is.null(input$file)) { return(NULL) }
+    else{
+    Dataset0 <- as.data.frame(read.csv(input$file$datapath ,header=TRUE, sep = ","))
+    return(Dataset0)
+    }
+  })
+  
   Dataset <- reactive({
     if (is.null(input$file)) { return(NULL) }
     else{
-    Dataset <- as.data.frame(read.csv(input$file$datapath ,header=TRUE, sep = ","))
-    rownames(Dataset) = Dataset[,1]
-    Dataset1 = Dataset[,2:ncol(Dataset)]
-    #Dataset = t(Dataset)
-    return(Dataset1)
-    }
+      Dataset1 = Dataset0()
+      rownames(Dataset1) = Dataset1[,1]
+      Dataset = Dataset1[,2:ncol(Dataset1)]
+      #Dataset = t(Dataset)
+      return(Dataset)
+        }
   })
+  
+  nu.Dataset = reactive({
+    data = Dataset()[,1:ncol(Dataset())]
+    Class = NULL
+    for (i in 1:ncol(data)){
+      c1 = class(data[,i])
+      Class = c(Class, c1)
+    }
+    nu = which(Class %in% c("numeric","integer"))
+    nu.data = data[,nu] 
+    return(nu.data)
+  })
+  
+  
+  output$readdata <- renderDataTable({
+    if (is.null(input$file)) {return(NULL)}
+    else {
+      Dataset0()
+    }
+  }, options = list(lengthMenu = c(5, 30, 50,100), pageLength = 5))
 
 fname <- reactive({
   if(length(strsplit(input$fname,',')[[1]])==0){return(NULL)}
@@ -35,6 +69,12 @@ fname <- reactive({
   }
 })
 
+output$colList <- renderUI({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+  varSelectInput("selVar",label = "Select Variables",data = Dataset(),multiple = TRUE,selectize = TRUE,selected = colnames(nu.Dataset()))
+  }
+    })
 
 filtered_dataset <- reactive({if (is.null(input$file)) { return(NULL) }
   else{
@@ -42,10 +82,6 @@ filtered_dataset <- reactive({if (is.null(input$file)) { return(NULL) }
     return(Dataset)
   }})
 
-
-output$colList <- renderUI({
-  varSelectInput("selVar",label = "Select Variables",data = Dataset(),multiple = TRUE,selectize = TRUE,selected = colnames(Dataset()))
-})
 
 # output$table22 <- renderTable ({ 
 #   round(cor(Dataset()),2) 
@@ -74,7 +110,7 @@ out = reactive({
   
   a = seq(from = 0, to=200,by = 4)
   j = length(which(a < ncol(nu.data)))
-  out = list(Dimensions = Dimensions,Summary =Summary ,Tail=Tail,fa.data,nu.data,a,j, Head=Head,MissingDataRows=Missing,missing.data.rows.count=mscount)
+  out = list(Dimensions=Dimensions, Summary=Summary, Tail=Tail, fa.data, nu.data, a, j, Head=Head, MissingDataRows=Missing, missing.data.rows.count=mscount)
   return(out)
 })
 
@@ -133,10 +169,10 @@ nS = reactive ({
 }
 })
 
-output$fselect <- renderUI({ 
+output$fselect <- renderUI({
   if (is.null(input$file)) { return(NULL) }
   else{
-  numericInput("fselect", "Number of Factors:", unlist((nS())[1])[3])
+  numericInput("fselect", "Number of Factors:", 2)  # unlist((nS())[1])[3])
   }
   })
 
@@ -324,11 +360,6 @@ output$plot2 = renderPlot({
   factor.plot(a0, a1, k2, k3)
   }
 })
-
-
-
-
-
 
 output$plot3 = renderPlot({
   if (is.null(input$file)) { return(NULL) }

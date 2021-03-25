@@ -47,16 +47,18 @@ shinyUI(pageWithSidebar(
                          br(),
                          
                          h4(p("Sample Data Description")),
-                         p("The data, collected as part of a 1987 intercity mode choice study, are a sub-sample of 210 non-business trips between Sydney, Canberra and Melbourne in which the traveler chooses a mode from four alternatives (plane, car, bus and train). The sample, 840 observations, is choice based with over-sampling of the less popular modes (plane, train and bus) and under-sampling of the more popular mode, car. The level of service data was derived from highway and transport networks in Sydney, Melbourne, non-metropolitan N.S.W. and Victoria, including the Australian Capital Territory.",align="justify"),
+                         p("The data, collected as part of a 1987 intercity mode choice study, are a sub-sample of 210 non-business trips between Sydney, 
+                           Canberra and Melbourne in which the traveler chooses a mode from four alternatives (plane, car, bus and train). 
+                           The sample, 210 individuals choice observations, is choice based with over-sampling of the less popular modes (plane, train and bus) and under-sampling of the more popular mode, car. The level of service data was derived from highway and transport networks in Sydney, Melbourne, non-metropolitan N.S.W. and Victoria, including the Australian Capital Territory.",align="justify"),
                       #  h4(p("Download Sample Input Files")),
                          downloadButton('downloadData', 'download sample data'),
                          br(),br(),
-                         p("Number of observations: 840 Observations on 4 Modes of transporataion for 210 Individuals.",align="justify"),
+                         p("Number of observations: 210 individuals' choice context for 4 modes of transporataion, 840 rows.",align="justify"),
                          h4('model specification variables'),
-                         h5('individual ID column'),
+                         h5('individual (observation) ID column for each choice context, every observation must have a row for each alternative'),
                          h5('choice/outcome column = 1 (0 otherwise)'),
                          h5('alternatives column = mode (plane, air, bus, car)'),
-                        
+                         
                          h4('individual specific X variables'),
                          h5('income      = household income'),
                          h5('size       = traveling group size'),
@@ -65,11 +67,11 @@ shinyUI(pageWithSidebar(
                          h5("vcost      = customer's estimate of variable cost (dollars)."),
                          h5("gcost      = customer's estimate of generalized cost, a measure inclusive of travel time savings (dollars)."),
                          br(),
-                      p('Note on Multinomial Logit - If you do not have alternative-specific variables (that is no data on alternatives that were not chosen), use discriminant analysis.',style="color:red"),
-                      h4(tags$a(href= 'https://isb-iids.shinyapps.io/discriminant-analysis/',"Click here to open Discriminant Analysis App")),
-                      p('Discriminant analysis is like a regression, for categorical outcome variable. 
-                        Data input required is also similar to regression input file 
-                        (unlike multinomial-logit data input file.)'),br(),br(),
+                      p('Note on Multinomial Logit - If you do not have alternative-specific variables (that is no data on alternatives that were not chosen), use discriminant analysis or bayes classifier.',style="color:red"),
+                      h4(tags$a(href= 'https://isb-iids.shinyapps.io/classification/',"Click here to open classification app")),
+                      #p('Discriminant analysis is like a regression, for categorical outcome variable. 
+                      #  Data input required is also similar to regression input file 
+                      #  (unlike multinomial-logit data input file.)'),br(),br(),
                 #          p("Please note that download will not work with RStudio interface. 
                 #            Download will work only in web-browsers. So open this app in a web-browser and then download the example file.")
                 ), 
@@ -77,14 +79,16 @@ shinyUI(pageWithSidebar(
                 # 
                 # tabPanel("Summary Stats", verbatimTextOutput("summary")),
                 # tabPanel("Correlation", verbatimTextOutput("correlation"),plotOutput("heatmap")),
-                 tabPanel("Data Summary",h4("Selected Variables"), verbatimTextOutput("head"),#verbatimTextOutput("tail"),
+                 tabPanel("Data Summary",#h4("Selected Variables"), verbatimTextOutput("head"),#verbatimTextOutput("tail"),
+                         h4("Uploaded Data"), 
+                         dataTableOutput("readdata"),tags$head(tags$style("tfoot {display: table-header-group;}")),br(),
                          h4("Data Summary of Selected X Variables"),verbatimTextOutput("summary"),h4("Missing Data Rows"),verbatimTextOutput("missing")),
                 tabPanel("Model Output",
                          #h4("Select Base Alternative"),
                          br(),htmlOutput("BaseAlternativeselect"),
-                         (p('Step1: Make sure you have selected the correct choice/outcome variable under "Data Selection" options in the left panel. It should be 0/1 vector',style="color:black")),
-                         (p('Step2: Select alternative-specific X variables and individual-specific X variables appropriately.',style="color:black")),
-                         br(),
+                         (p('Step1: Make sure every individual/observation has one row for each alternative, and only one of those alternatives is marked as "1" and rest are marked as "O" in the choice/outcome column.',style="color:black")),
+                         (p('Step2: Ensure you have selected the correct choice/outcome (0/1) variable under "Data Selection" on the left panel. It should be 0/1 vector',style="color:black")),
+                         (p('Step3: Look at "Data Summary" and select alternative-specific X variables and individual-specific X variables appropriately.',style="color:black")),
                          h4("Model Summary"),verbatimTextOutput("olssummary"),
                          h4("Correlation Table"),verbatimTextOutput("correlation"),
                          
@@ -94,7 +98,9 @@ shinyUI(pageWithSidebar(
                          ),
               #  tabPanel("Correlation",h4("Correlation Table"), verbatimTextOutput("correlation"),h4("Correlation"),plotOutput("corplot")),
                  tabPanel("Prediction Probablities", 
-                          h4("Predicted probablities"),verbatimTextOutput("probablities"),
+                          h4("Predicted probablities"),
+                          dataTableOutput("probablities"),tags$head(tags$style("tfoot {display: table-header-group;}")),br(),
+                          
                           h4(p("Download prediction probabilities for input data")),
                           downloadButton('downloadData1', 'Download predicted probabilities for input data'),
                           br(),br()

@@ -1,7 +1,6 @@
 ###########################################################
 #  Classification and Regression Tree App (server)        #
 ###########################################################
-suppressPackageStartupMessages({
   try(require("shiny")||install.packages("shiny"))
   try(require("pastecs")||install.packages("pastecs"))
   try(require("rpart")||install.packages("rpart"))
@@ -11,55 +10,79 @@ suppressPackageStartupMessages({
   try(require("hydroGOF")||install.packages("hydroGOF"))
   try(require("party")||install.packages("party"))
   try(require("partykit")||install.packages("partykit"))
-})
+  try(require("caret")||install.packages("caret"))
+  try(require("visNetwork")||install.packages("visNetwork"))
+  try(require("sparkline")||install.packages("sparkline"))
 
 
-library(shiny)
-library(rpart)
-library(rpart.plot)
-library(pastecs)
-library(dplyr)
-library(Hmisc)
-library(hydroGOF)
-require(party)
-require(partykit)
+library("shiny")
+library("rpart")
+library("rpart.plot")
+library("pastecs")
+library("dplyr")
+library("Hmisc")
+library("hydroGOF")
+library("party")
+library("partykit")
+library("caret")
+library("visNetwork")
+library("sparkline")
 
 
 shinyServer(function(input, output,session) {
   
   #------------------------------------------------#
   
-  readdata <- reactive({
+  readdataf <- reactive({
     if (is.null(input$file)) { return(NULL) }
     else{
       readdata <- as.data.frame(read.csv(input$file$datapath ,header=TRUE, sep = ","))
       return(readdata)
     }
   })
-
-  # Select variables:
-  output$yvarselect <- renderUI({
-    if (identical(readdata(), '') || identical(readdata(),data.frame())) return(NULL)
+  
+  output$samsel <- renderUI({
     if (is.null(input$file)) {return(NULL)}
     else {
-    selectInput("yAttr", "Select Y variable (Is it is a categorical variable? mark it as factor variable)",
-                colnames(readdata()), colnames(readdata())[1])
+      selectInput("obs", "Select sub sample", c("quick run, 1,000 obs", "10,000 obs", "full dataset"), selected = "quick run, 1,000 obs")
     }
   })
   
-  output$xvarselect <- renderUI({
-    if (identical(readdata(), '') || identical(readdata(),data.frame())) return(NULL)
+  readdata <- reactive({
     if (is.null(input$file)) {return(NULL)}
     else {
-    checkboxGroupInput("xAttr", "Select X variables",
-                       setdiff(colnames(readdata()),input$yAttr), setdiff(colnames(readdata()),input$yAttr))
-        }
-      })
-
-  readdata.temp = reactive({
-    mydata = readdata()[,c(input$xAttr,input$yAttr)]
+    if (input$obs=="full dataset") { return(readdataf()) }
+    else if(input$obs=="10,000 obs") 
+    {
+      if (nrow(readdataf())>10000){
+        set.seed(1234)
+        testsample= sample(1:nrow(readdataf()), 10000 )
+        Dataset1=readdataf()[testsample,]
+        return(Dataset1)}
+      else {return(readdataf())}
+    }
+    else (input$obs=="1,000 obs")
+    {
+      if (nrow(readdataf())>1000){
+        set.seed(1234)
+        testsample= sample(1:nrow(readdataf()), 1000 )
+        Dataset1=readdataf()[testsample,]
+        return(Dataset1)}
+      else {return(readdataf())}
+    }  }
   })
-
+  
+  output$readdata <- renderDataTable({
+    if (is.null(input$file)) {return(NULL)}
+    else {
+      readdataf()
+    }
+  }, options = list(lengthMenu = c(5, 30, 50,100), pageLength = 5))
+  
+  readdata.temp = reactive({
+    mydata = readdataf()
+  })
+  
   nu.Dataset = reactive({
     data = readdata.temp()
     Class = NULL
@@ -70,15 +93,35 @@ shinyServer(function(input, output,session) {
     nu = which(Class %in% c("numeric","integer"))
     nu.data = data[,nu] 
     return(nu.data)
-  })  
+  }) 
+
+  # Select variables:
+  output$yvarselect <- renderUI({
+    if (identical(readdataf(), '') || identical(readdataf(),data.frame())) return(NULL)
+    if (is.null(input$file)) {return(NULL)}
+    else {
+    selectInput("yAttr", "Select Y variable (Is it is a categorical variable? mark it as factor variable)",
+                colnames(readdataf()), setdiff(colnames(readdataf()),c(colnames(nu.Dataset()))))
+    }
+  })
   
-  
-  output$fyvarselect <- renderUI({
-    if (identical(readdata(), '') || identical(readdata(),data.frame())) return(NULL)
+  output$xvarselect <- renderUI({
+    if (identical(readdataf(), '') || identical(readdataf(),data.frame())) return(NULL)
+    if (is.null(input$file)) {return(NULL)}
+    else {
+    checkboxGroupInput("xAttr", "Select X variables",
+                       setdiff(colnames(readdataf()),input$yAttr), setdiff(colnames(readdataf()),input$yAttr))
+        }
+      })
+
+   output$fyvarselect <- renderUI({
+    if (identical(readdataf(), '') || identical(readdataf(),data.frame())) return(NULL)
     if (is.null(input$file)) {return(NULL)}
     else {
       checkboxGroupInput("fyAttr", "Select if Y is a factor (categorical) variable",
-                         input$yAttr,setdiff(colnames(readdata.temp()),c(input$xAttr,colnames(nu.Dataset()))))
+                         #input$yAttr,
+                         setdiff(colnames(readdataf()[,c(input$xAttr,input$yAttr)]),c(input$xAttr)),
+                         setdiff(colnames(readdataf()[,c(input$xAttr,input$yAttr)]),c(colnames(nu.Dataset()))))
     }
   })
     
@@ -88,8 +131,8 @@ shinyServer(function(input, output,session) {
     else {
     checkboxGroupInput("fxAttr", "Select factor (categorical) X variables",
                      #colnames(readdata.temp()),
-                     setdiff(colnames(readdata.temp()),input$yAttr),
-                     setdiff(colnames(readdata.temp()),c(input$yAttr,colnames(nu.Dataset()))) )
+                     setdiff(colnames(readdata.temp()[,c(input$xAttr,input$yAttr)]),input$yAttr),
+                     setdiff(colnames(readdata.temp()[,c(input$xAttr,input$yAttr)]),c(input$yAttr,colnames(nu.Dataset()))) )
                     #  setdiff(colnames(Dataset.temp()),input$yAttr),setdiff(colnames(Dataset.temp()),c(input$yAttr,colnames(nu.Dataset()))) )
     }
   })
@@ -293,7 +336,7 @@ shinyServer(function(input, output,session) {
       
     }
     
-    out = data.frame(Yhat = val3, Dataset.Predict())
+    out = data.frame(Y.predicted = val3, Dataset.Predict())
     return(out)    
     
   })
@@ -313,7 +356,7 @@ shinyServer(function(input, output,session) {
       
     }
     
-    out = data.frame(Yhat = val3, Dataset())
+    out = data.frame(Y.predicted = val3, Dataset())
     return(out)    
     
   })
@@ -325,7 +368,9 @@ shinyServer(function(input, output,session) {
   output$predictionorg =  renderPrint({
     if (is.null(input$filep)) {return(NULL)}
     head(predictionorg(),10)
-  })  
+  }) 
+  
+  
   
   output$prediction <- renderDataTable({
     if (is.null(input$filep)) {return(NULL)}
@@ -367,14 +412,14 @@ shinyServer(function(input, output,session) {
     if (is.null(input$file)) {return(NULL)}
     
     if (class(test_data()[,c(input$yAttr)]) == "factor"){
-      y = test_data()[,input$yAttr]
-      yhat = fit.rt()$validation1
-    confusion_matrix = table(y,yhat)
+      y.actual = test_data()[,input$yAttr]
+      Y.predicted = fit.rt()$validation1
+    confusion_matrix = table(Y.predicted,y.actual)
     accuracy = (sum(diag(confusion_matrix))/sum(confusion_matrix))
     out = list(Confusion_matrix_of_Test_Data = confusion_matrix, Model_Accuracy = accuracy)
     } else {
-    dft = data.frame(scale(data.frame(y = test_data()[,input$yAttr], yhat = fit.rt()$validation1)))
-    mse.y = mse(dft$y,dft$yhat)
+    dft = data.frame(scale(data.frame(y = test_data()[,input$yAttr], Y.predicted = fit.rt()$validation1)))
+    mse.y = mse(dft$y,dft$Y.predicted)
     out = list(Standardized_Mean_Square_Error = mse.y)
     } 
     out
@@ -384,14 +429,14 @@ shinyServer(function(input, output,session) {
     if (is.null(input$file)) {return(NULL)}
     
     if (class(train_data()[,c(input$yAttr)]) == "factor"){
-      y = train_data()[,input$yAttr]
-      yhat = fit.rt()$validation
-      confusion_matrix = table(y,yhat)
+      y.actual = train_data()[,input$yAttr]
+      Y.predicted = fit.rt()$validation
+      confusion_matrix = table(Y.predicted,y.actual)
       accuracy = (sum(diag(confusion_matrix))/sum(confusion_matrix))
       out = list(Confusion_matrix_of_Training_Data = confusion_matrix, Model_Accuracy = accuracy)
     } else {
-      dft = data.frame(scale(data.frame(y = train_data()[,input$yAttr], yhat = fit.rt()$validation)))
-      mse.y = mse(dft$y,dft$yhat)
+      dft = data.frame(scale(data.frame(y = train_data()[,input$yAttr], Y.predicted = fit.rt()$validation)))
+      mse.y = mse(dft$y,dft$Y.predicted)
       out = list(Standardized_Mean_Square_Error = mse.y)
     } 
     out
@@ -401,14 +446,15 @@ shinyServer(function(input, output,session) {
     if (is.null(input$file)) {return(NULL)}
     
     if (class(Dataset()[,c(input$yAttr)]) == "factor"){
-      y = Dataset()[,input$yAttr]
-      yhat = fit.rt()$validation2
-      confusion_matrix = table(y,yhat)
+      y.actual = Dataset()[,input$yAttr]
+      Y.predicted = fit.rt()$validation2
+      confusion_matrix = table(Y.predicted,y.actual)
       accuracy = (sum(diag(confusion_matrix))/sum(confusion_matrix))
-      out = list(Confusion_matrix_of_Input_Data = confusion_matrix, Model_Accuracy = accuracy)
+      out=confusionMatrix(confusion_matrix)
+      #out = list(Confusion_matrix_of_Input_Data = confusion_matrix, Model_Accuracy = accuracy)
     } else {
-      dft = data.frame(scale(data.frame(y = Dataset()[,input$yAttr], yhat = fit.rt()$validation2)))
-      mse.y = mse(dft$y,dft$yhat)
+      dft = data.frame(scale(data.frame(y = Dataset()[,input$yAttr], Y.predicted = fit.rt()$validation2)))
+      mse.y = mse(dft$y,dft$Y.predicted)
       out = list(Standardized_Mean_Square_Error = mse.y)
     } 
     out
@@ -472,6 +518,7 @@ shinyServer(function(input, output,session) {
     if (is.null(input$file)) {return(NULL)}
     
     title1 = paste("decision tree for", input$yAttr, "(set higher complexity parameter to reduce tree length)")
+   # title1 = paste("set higher complexity parameter to reduce tree depth")
     
   post((fit.rt()$model), 
        # file = "tree2.ps", 
@@ -480,6 +527,16 @@ shinyServer(function(input, output,session) {
        compress = TRUE,
        title = title1
       ) 
+  })
+  
+  output$mod_sum <- renderPrint({
+    if (is.null(input$file)) {return(NULL)}
+    as.party(fit.rt()$model)
+  })
+  
+  output$plot33 = renderVisNetwork({
+    if (is.null(input$file)) {return(NULL)}
+    visTree(fit.rt()$model, main = paste("decision tree for", input$yAttr), width = "100%")
   })
   
   

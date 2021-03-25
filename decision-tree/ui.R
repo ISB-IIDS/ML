@@ -1,7 +1,7 @@
 ###########################################################
 #   Classification and Regression Tree App (ui)           #
 ###########################################################
-
+library("visNetwork")
 shinyUI(
   fluidPage(
     
@@ -14,7 +14,7 @@ shinyUI(
         # Upload data:
         h4(p(" Data Input")),
         fileInput("file", "Upload data (csv file)"),
-        sliderInput('sample','Set test sample percentage',10,40,25),
+        sliderInput('sample','Set test sample percentage',10,40,15),
         # h4(p("Select Response Variable")),
         sliderInput('cp','Set complexity parameter',0,0.1,0),
         h4(p(" Data Selection")),
@@ -23,6 +23,7 @@ shinyUI(
       #  submitButton(text = "Apply Changes", icon("refresh")),br(),
         htmlOutput("fyvarselect"),
         htmlOutput("fxvarselect"),
+        htmlOutput("samsel"),
      #   fileInput("filep", "Upload new data for prediction (csv file)")
       ),   # end of sidebar panel
       
@@ -53,11 +54,17 @@ shinyUI(
                             ), # close Overview tab
                             
                     #tabPanel("Data Summary",verbatimTextOutput('summarydata')),
-                    tabPanel("Data Summary",h4("Selected Variables"), verbatimTextOutput("head"),#verbatimTextOutput("tail"),
-                            h4("Data Summary of Selected X Variables"),verbatimTextOutput("summarydata"),h4("Missing Data Rows"),verbatimTextOutput("missing")),
+                    tabPanel("Data Summary",
+                             h4("Uploaded Data"), 
+                             dataTableOutput("readdata"),tags$head(tags$style("tfoot {display: table-header-group;}")),br(),
+                             #verbatimTextOutput("head"),#verbatimTextOutput("tail"),
+                            h4("Data Summary of Selected X Variables"),verbatimTextOutput("summarydata"),
+                            h4("Missing Data Rows"),verbatimTextOutput("missing"),
+                            br()),
                     tabPanel("Model Output",br(),
                              (p('Is your outcome (Y) variable factor (catregorical)? 
-                                  If yes, please, make sure that you have check-marked it as a factor variable in the left panel.',style="color:red")),
+                                  If yes, please, make sure that you have check-marked it as a factor variable 
+                                in the left panel.',style="color:red")),
                              h4('Variable importance'),
                              verbatimTextOutput('imp'),
                              h4('Number of Rows and Columns in Training Data'),
@@ -78,19 +85,27 @@ shinyUI(
                              br()
                              ),
                     tabPanel('Summary of Splits',#h5('Be patient model may take some time to finish estimation'),
-                             verbatimTextOutput("summary")),
+                             verbatimTextOutput("mod_sum"),
+                             #verbatimTextOutput("summary"),
+                             br()),
+                    
                     tabPanel("Decision Tree",#h5('Be patient model may take some time to finish estimation'),
-                            # h4('highest optimal complexity parmeter'),verbatimTextOutput("cpselect"),
-                             # h4('Regression Tree'),
-                             #sliderInput('height','chart height',500,5000,1100),
+                            #br(),
+                            h4("Missing Data Rows Count"),verbatimTextOutput("mscount"),
+                            #(p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")), 
+                            visNetworkOutput("plot33",height = 600, width = 850), br(),br(),
+                            (p('Is your outcome (Y) variable factor (catregorical)? 
+                                  If yes, please, make sure that you have check-marked it as a factor variable 
+                                in the left panel.',style="color:red")),
+                            h5("To optimally prune the tree, set the complexity parameter (in the left panel) = 0 and
+                            find the row with lowest 'xerror' value in 'Model Results Summary' under 'Model output' tab."),
+                            h5("Look at the corresponding value of CP
+                              in the lowest 'xerror' value row and set the complexity parameter (in the left panel) close to that value."),
+                            plotOutput("plot3",height = 1600),
                             br(),
-                            p("To optimally prune the tree, set the complexity parameter (in the left panel) = 0. 
-                            Find the lowest vaue of xerror in 'Summary of Splits' table; look at the corresponding value of CP
-                              in the table and set the complexity parameter (in the left panel) close to that value."),
-                             plotOutput("plot3",height = 1600),
                        #      h4('Visualize cross-validation results'),
                         #     plotOutput("plot1",height = 800)
-                             ),                   
+                             br()),                   
                #     tabPanel("Node labels",plotOutput("plot2",height = 600, width = 850),
                 #             #h4("First column is assigned node number for each obsrvn in model training data"),
                  #            #verbatimTextOutput("nodesout1"),
@@ -102,9 +117,14 @@ shinyUI(
                        #      ),
                     #tabPanel("Variable",verbatimTextOutput('imp')),
                 tabPanel("Input Data with Predictions",
+
                          h4('Model Accuracy/Error of Input Data'),
                          verbatimTextOutput("validation2"),
-                          br(),
+
+                         (p('Is your outcome (Y) variable factor (catregorical)? 
+                                  If yes, please, make sure that you have check-marked it as a factor variable 
+                                in the left panel.',style="color:red")),
+
                          h4("Download input data with predictions"),
                         downloadButton('downloadData0', 'download predictions for input data'),
                         #h4("First 10 rows of predictions for new data (upload prediction data)"),

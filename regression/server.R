@@ -4,7 +4,7 @@
 if(!require("shiny")) {install.packages("shiny")}
 if(!require("pastecs")){install.packages("pastecs")} #for stat.desc
 if(!require("RColorBrewer")){install.packages("RColorBrewer")}
-if(!require("Hmisc")){install.packages("Hmisc")}
+if (!require("Hmisc")){install.packages("Hmisc")} # for describe
 if(!require("ggplot2")){install.packages("ggplot2")}
 if(!require("reshape2")){install.packages("reshape2")}
 if (!require("corrplot")) {install.packages("corrplot")}
@@ -25,7 +25,7 @@ library(hydroGOF)
 
 shinyServer(function(input, output,session) {
   
-Dataset <- reactive({
+Datasetf <- reactive({
   if (is.null(input$file)) { return(NULL) }
   else{
     Dataset <- as.data.frame(read.csv(input$file$datapath ,header=TRUE, sep = ","))
@@ -33,6 +33,43 @@ Dataset <- reactive({
   }
 })
 
+output$samsel <- renderUI({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    selectInput("obs", "Select sub sample", c("quick run, 1,000 obs", "10,000 obs", "full dataset"), selected = "quick run, 1,000 obs")
+  }
+})
+
+Dataset <- reactive({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+  if (input$obs=="full dataset") { return(Datasetf()) }
+  else if(input$obs=="10,000 obs") 
+  {
+    if (nrow(Datasetf())>10000){
+      set.seed(1234)
+      testsample= sample(1:nrow(Datasetf()), 10000 )
+      Dataset1=Datasetf()[testsample,]
+      return(Dataset1)}
+    else {return(Datasetf())}
+  }
+  else (input$obs=="1,000 obs")
+  {
+    if (nrow(Datasetf())>1000){
+      set.seed(1234)
+      testsample= sample(1:nrow(Datasetf()), 1000 )
+      Dataset1=Datasetf()[testsample,]
+      return(Dataset1)}
+    else {return(Datasetf())}
+  }  }
+})
+
+output$readdata <- renderDataTable({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    Datasetf()
+  }
+}, options = list(lengthMenu = c(5, 30, 50,100), pageLength = 5))
 
 Datasetp <- reactive({
   if (is.null(input$filep)) { return(NULL) }
@@ -75,7 +112,7 @@ output$xvarselect <- renderUI({
 })
 
 Dataset.temp = reactive({
-  mydata = Dataset()[,c(input$yAttr,input$xAttr)]
+  mydata = Dataset()
 })
 
 nu1.Dataset = reactive({
@@ -95,26 +132,26 @@ output$fxvarselect <- renderUI({
   if (is.null(input$file)) {return(NULL)}
   else {
   checkboxGroupInput("fxAttr", "Select factor (categorical) variables in X",
-                     setdiff(colnames(Dataset.temp()),input$yAttr),setdiff(colnames(Dataset.temp()),c(input$yAttr,colnames(nu1.Dataset()))) )
-  }
+                     #setdiff(colnames(Dataset.temp()[,c(input$yAttr,input$xAttr)]),input$yAttr),setdiff(colnames(Dataset.temp()),c(input$yAttr,colnames(nu1.Dataset()))) )
+                      colnames(Dataset.temp()[,c(input$xAttr)]),setdiff(colnames(Dataset.temp()),c(colnames(nu1.Dataset()))) )
+      }
 })
 
 mydata = reactive({
-  mydata = Dataset()[,c(input$yAttr,input$xAttr)]
-
-  if (length(input$fxAttr) >= 1){
+  mydata1 = Dataset()[,c(input$yAttr,input$xAttr)]
+  if (!is.null(input$fxAttr)){
   for (j in 1:length(input$fxAttr)){
-      mydata[,input$fxAttr[j]] = factor(mydata[,input$fxAttr[j]])
-  }
-  }
-  return(mydata)
+      mydata1[,input$fxAttr[j]] = factor(mydata1[,input$fxAttr[j]])
+                                    }
+                              }
+  return(mydata1)
   
 })
 
 pred.readdata = reactive({
   mydata = Datasetp()
   
-  if (length(input$fxAttr) >= 1){
+  if (!is.null(input$fxAttr)){
     for (j in 1:length(input$fxAttr)){
       mydata[,input$fxAttr[j]] = factor(mydata[,input$fxAttr[j]])
     }
@@ -128,7 +165,7 @@ Dataset.Predict <- reactive({
   fxc = setdiff(input$fxAttr, input$yAttr)
   mydata = pred.readdata()[,c(input$xAttr)]
   
-  if (length(fxc) >= 1){
+  if (!is.null(input$fxAttr)){
     for (j in 1:length(fxc)){
       mydata[,fxc[j]] = as.factor(mydata[,fxc[j]])
     }

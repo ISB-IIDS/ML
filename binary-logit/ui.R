@@ -16,9 +16,11 @@ shinyUI(pageWithSidebar(
     fileInput("file", "Upload input data (csv file with header)"),
     h4(p("Data Selection")),
     htmlOutput("yvarselect"),
+    htmlOutput("BaseAlternativeselect"),
     htmlOutput("xvarselect"),
   #  submitButton(text = "Apply Changes", icon("refresh")),br(),
     htmlOutput("fxvarselect"),
+    htmlOutput("samsel"),
   #  fileInput("filep", "Upload new data for prediction (csv file with header)"),
     br()
   ),
@@ -50,20 +52,26 @@ shinyUI(pageWithSidebar(
                          #h4(p("Download Sample Input File")),
                          downloadButton('downloadData', 'download sample data'),
                          br(), br(),
-                         p('If your data has more than two classes (categorical outcomes) use discriminant analysis.',style="color:red"),
-                         h4(tags$a(href= 'https://isb-iids.shinyapps.io/discriminant-analysis/',"Click here to open Discriminant Analysis App")),
+                         p('If your data has more than two classes (categorical outcomes) use discriminant analysis or bayes classifier.',style="color:red"),
+                         h4(tags$a(href= 'https://isb-iids.shinyapps.io/classification/',"Click here to open classification app")),
                          br(),
                         # p("*Please note that download will not work with RStudio interface. Download will work only in web-browsers."),
                          ),
-                tabPanel("Data Summary",h4("Selected Variables"), verbatimTextOutput("head"),#verbatimTextOutput("tail"),
+                tabPanel("Data Summary",#h4("Selected Variables"), verbatimTextOutput("head"),#verbatimTextOutput("tail"),
+                         h4("Uploaded Data"), 
+                         dataTableOutput("readdata"),tags$head(tags$style("tfoot {display: table-header-group;}")),br(),
                          h4("Data Summary of Selected X Variables"),verbatimTextOutput("summary"),
                          h4("Missing Data Rows"),verbatimTextOutput("missing")),
-                tabPanel("Summary Logit", br(), h4(p('Y must be binary variable ',style="color:red")),
+              
+                  tabPanel("Summary Logit", # br(), h4(p('Y must be binary variable ',style="color:red")),
+                         h4("Missing Data Rows Count"),verbatimTextOutput("mscount"),
+                         (p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")),
+                         h4("Confusion Matrix"),verbatimTextOutput("validation"),
                          h4("Summary Logistic Regression Model"),verbatimTextOutput("olssummary"),
                          h4("Correlation Table"),verbatimTextOutput("correlation"),
                          
                          h4("Correlation Visulization - Input Data"),
-                         (p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")),
+                         #(p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")),
                          plotOutput("corplot")
                          #h4('Confusion Matrix'), verbatimTextOutput("validation")),
                          #h4("Summary OLS standardized model"), verbatimTextOutput("olssummarystd")),
@@ -88,13 +96,14 @@ shinyUI(pageWithSidebar(
                          ),
                # tabPanel("Correlation",h4("Correlation Table - Input data"), verbatimTextOutput("correlation"),
                #          h4("Correlation Visulization - Input Data"),plotOutput("corplot")),
-                tabPanel("Cutoff and ROC", 
+                tabPanel("ROC", 
                          h4("Suggested Optimal Cutoff Probability: Choose Cutoff to Maximize, Sensitivity + Specificity"),
                          sliderInput('cutoff','Cutoff Probability',0,1,0.5),
-                         (p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")),verbatimTextOutput("mscount"),
-                         (p('Y must be binary variable',style="color:red")),
-                         h4("Confusion Matrix Summary"),verbatimTextOutput("confusionmatrix"),
+                         #verbatimTextOutput("mscount"),
+                         #(p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")),
+                         #(p('Y must be binary variable',style="color:red")),
                          #h4("Fitted Values vs Y - Input Data"),
+                         h4("Confusion Matrix Summary"),verbatimTextOutput("confusionmatrix"),
                          plotOutput("resplot3"),
                          h4("ROC Curve"),plotOutput("roc")),
                 #tabPanel("Residuals Plot",
@@ -118,22 +127,17 @@ shinyUI(pageWithSidebar(
                          # verbatimTextOutput('prediction'),
                          # h4("Download new data with predictions"),
                          # downloadButton('downloadData1', 'download predictions for new data')      
-                         ),
-               tabPanel("Class Visualization",br(),
-                        numericInput("perp", "Set Perplexity Parameter",25 ,min=5,max=95, step=10),
-                        numericInput("iter", "Set Max Iterations",500, min=500, max=5000, step=500),
-                        h4(p('Note: projecting numerical input data in two dimensions; it takes a while, be patient.',style="color:red")),
-                        #h4("Visualizing Data in 2 Dimensions (it takes quite a while, be paitent)."),
-                        tags$a(href="https://en.wikipedia.org/wiki/T-distributed_stochastic_neighbor_embedding", "-Wikipedia"),br(),
-                        br(),
-                        #(p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")),
-                        #verbatimTextOutput("dup"),
-                        plotOutput("resplot4",height = 800)
-                        #plotOutput("resplot5",height = 800),
-                        #plotOutput("resplot6",height = 800)
-               )
+                         )
                
-                )
+               # tabPanel("Class Visualization",br(),
+               #          numericInput("perp", "Set Perplexity Parameter",25 ,min=5,max=95, step=10),
+               #          numericInput("iter", "Set Max Iterations",500, min=500, max=5000, step=500),
+               #          h4(p('Note: projecting numerical input data in two dimensions; it takes a while, be patient.',style="color:red")),
+               #          tags$a(href="https://en.wikipedia.org/wiki/T-distributed_stochastic_neighbor_embedding", "-Wikipedia"),br(),
+               #          br(),
+               #          plotOutput("resplot4",height = 800) )
+                
+               )
       ) 
     ) 
   )

@@ -33,7 +33,7 @@ library(fastDummies)
 
 shinyServer(function(input, output,session) {
   
-Dataset <- reactive({
+Datasetf <- reactive({
   if (is.null(input$file)) { return(NULL) }
   else{
     Dataset <- as.data.frame(read.csv(input$file$datapath ,header=TRUE, sep = ","))
@@ -41,6 +41,43 @@ Dataset <- reactive({
   }
 })
 
+output$samsel <- renderUI({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    selectInput("obs", "Select sub sample", c("quick run, 1,000 obs", "10,000 obs", "full dataset"), selected = "quick run, 1,000 obs")
+  }
+})
+
+Dataset <- reactive({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+  if (input$obs=="full dataset") { return(Datasetf()) }
+  else if(input$obs=="10,000 obs") 
+  {
+    if (nrow(Datasetf())>10000){
+      set.seed(1234)
+      testsample= sample(1:nrow(Datasetf()), 10000 )
+      Dataset1=Datasetf()[testsample,]
+      return(Dataset1)}
+    else {return(Datasetf())}
+  }
+  else (input$obs=="1,000 obs")
+  {
+    if (nrow(Datasetf())>1000){
+      set.seed(1234)
+      testsample= sample(1:nrow(Datasetf()), 1000 )
+      Dataset1=Datasetf()[testsample,]
+      return(Dataset1)}
+    else {return(Datasetf())}
+  } } 
+})
+
+output$readdata <- renderDataTable({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    Datasetf()
+  }
+}, options = list(lengthMenu = c(5, 30, 50,100), pageLength = 5))
 
 pred.readdata <- reactive({
   if (is.null(input$filep)) { return(NULL) }
@@ -55,7 +92,7 @@ output$yvarselect <- renderUI({
   if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
   if (is.null(input$file)) {return(NULL)}
   else {
-  selectInput("yAttr", "Select Y variable (must be binary)",
+  selectInput("yAttr", "Select Y variable",
                      colnames(Dataset()), colnames(Dataset())[1])
   }
 })
@@ -95,10 +132,29 @@ output$fxvarselect <- renderUI({
   }
 })
 
+basealt <- reactive({
+    basealt = (as.data.frame(t(as.matrix(table(Dataset()[,input$yAttr])))))
+  return(basealt)
+})
+
+#select base alternative
+output$BaseAlternativeselect <- renderUI({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    #if (identical(base(), '') || identical(base(),data.frame())) return(NULL)
+    #y=t(as.matrix(table(Dataset()$AlternativesAttr))) 
+    selectInput("BaseAlternative", "Set Y = 1 to",
+                colnames(basealt()), colnames(basealt())[2] )
+  }
+})
+
 mydata = reactive({
   ydata = Dataset()[,c(input$yAttr)]
-  Y=(dummy_cols(ydata))[,3]
-  mydata=cbind(Y, Dataset()[,c(input$yAttr,input$xAttr)])
+  Y=as.data.frame(dummy_cols(ydata))[,-1]
+  names(Y) = colnames(basealt())
+  Y1=Y[,input$BaseAlternative]
+  mydata=cbind(Y1, Dataset()[,c(input$yAttr,input$xAttr)])
+  colnames(mydata)[1]="Y.actual"
   mydata[,input$yAttr] = factor(mydata[,input$yAttr])
   if (length(input$fxAttr) >= 1){
   for (j in 1:length(input$fxAttr)){
@@ -195,7 +251,7 @@ plot_data = reactive({
 
 ols = reactive({
     rhs = paste(input$xAttr, collapse = "+")
-    formula= as.formula(paste("Y","~", rhs , sep=""))
+    formula= as.formula(paste("Y.actual","~", rhs , sep=""))
     ols = glm(formula, data = mydata(), family=binomial)
   return(ols)
 })
@@ -244,7 +300,7 @@ output$datatable = renderTable({
 
 output$validation = renderPrint({
   if (is.null(input$file)) {return(NULL)}
-    y_actual = mydata()[,"Y"]
+    y_actual = mydata()[,"Y.actual"]
     y_predicted = as.integer(ols()$fitted.values>0.5)
     confusion_matrix = table(y_predicted,y_actual)
     accuracy = (sum(diag(confusion_matrix))/sum(confusion_matrix))
@@ -256,7 +312,7 @@ output$confusionmatrix = renderPrint({
   if (is.null(input$file)) {return(NULL)}
   else {
   data.fit = as.integer(ols()$fitted.values>input$cutoff)
-  data.act = (mydata()[,"Y"])
+  data.act = (mydata()[,"Y.actual"])
   Confusion_Matrix = confusionMatrix(as.factor(data.fit),as.factor(data.act))
   #out=list(Sum_Specificity_Senstivity=Confusion_Matrix['Senstivity']+Confusion_Matrix['Specificity'], Confusion_Matrix=Confusion_Matrix)
   Confusion_Matrix  
@@ -267,7 +323,7 @@ output$roc = renderPlot({
   if (is.null(input$file)) {return(NULL)}
   else {
   pred.val = predict(ols(),mydata(),type="response")
-  pred.lm = ROCR::prediction(pred.val, mydata()[,"Y"])
+  pred.lm = ROCR::prediction(pred.val, mydata()[,"Y.actual"])
   perf.lm = performance(pred.lm,"tpr", "fpr")
   #roc_graph<-cbind(perf.lm@x.values[[1]],perf.lm@y.values[[1]],perf.lm@alpha.values[[1]]);
   #write.csv(roc_graph, file="roc_graph1.csv")
@@ -318,7 +374,7 @@ output$inputprediction <- renderDataTable({
 output$resplot3 = renderPlot({
   if (is.null(input$file)) {return(NULL)}
   else {
-    plot(ols()$fitted.values,mydata()[,"Y"],main="Predicted vs. Actual Y", 
+    plot(ols()$fitted.values,mydata()[,"Y.actual"],main="Predicted vs. Actual Y", 
          xlab="Predicted Y", ylab="Actual Y", col=round(ols()$fitted.values>input$cutoff,0)+1  ) 
     #abline(0,1)  
   }

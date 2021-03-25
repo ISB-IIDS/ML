@@ -1,5 +1,5 @@
 #################################################
-#      Discriminant Analysis App                      #
+#      Classification Analysis App                      #
 #################################################
 if(!require("shiny")) {install.packages("shiny")}
 if(!require("pastecs")){install.packages("pastecs")} #for stat.desc
@@ -10,8 +10,9 @@ if(!require("reshape2")){install.packages("reshape2")}
 if (!require("corrplot")) {install.packages("corrplot")}
 if (!require("hydroGOF")) {install.packages("hydroGOF")}
 if (!require("MASS")) {install.packages("MASS")}
-if (!require("klaR")) {install.packages("klaR")}
-if (!require("Rtsne")) {install.packages("Rtsne")}
+if (!require("caret")) {install.packages("caret")}
+#if (!require("Rtsne")) {install.packages("Rtsne")}
+if (!require("e1071")) {install.packages("e1071")}
 
 library(shiny)
 library(pastecs)
@@ -21,18 +22,57 @@ library(Hmisc)
 library(reshape2)
 library(corrplot)
 library(hydroGOF)
-library(klaR)
-library(Rtsne)
+library(MASS)
+library(e1071)
+library(caret)
 
 shinyServer(function(input, output,session) {
   
-Dataset <- reactive({
+Datasetf <- reactive({
   if (is.null(input$file)) { return(NULL) }
   else{
     Dataset <- as.data.frame(read.csv(input$file$datapath ,header=TRUE, sep = ","))
     return(Dataset)
   }
 })
+
+output$samsel <- renderUI({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    selectInput("obs", "Select sub sample", c("quick run, 1,000 obs", "10,000 obs", "full dataset"), selected = "quick run, 1,000 obs")
+  }
+})
+
+Dataset <- reactive({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+  if (input$obs=="full dataset") { return(Datasetf()) }
+  else if(input$obs=="10,000 obs") 
+  {
+    if (nrow(Datasetf())>10000){
+      set.seed(1234)
+      testsample= sample(1:nrow(Datasetf()), 10000 )
+      Dataset1=Datasetf()[testsample,]
+      return(Dataset1)}
+    else {return(Datasetf())}
+  }
+  else (input$obs=="1,000 obs")
+  {
+    if (nrow(Datasetf())>1000){
+      set.seed(1234)
+      testsample= sample(1:nrow(Datasetf()), 1000 )
+      Dataset1=Datasetf()[testsample,]
+      return(Dataset1)}
+    else {return(Datasetf())}
+  } } 
+})
+
+output$readdata <- renderDataTable({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    Datasetf()
+  }
+}, options = list(lengthMenu = c(5, 30, 50,100), pageLength = 5))
 
 Datasetp <- reactive({
   if (is.null(input$filep)) { return(NULL) }
@@ -42,28 +82,8 @@ Datasetp <- reactive({
   }
 })
 
-# Select variables:
-output$yvarselect <- renderUI({
-  if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
-  if (is.null(input$file)) {return(NULL)}
-  else {
-  selectInput("yAttr", "Select Y variable (must be factor/categorical)",
-                     colnames(Dataset()), colnames(Dataset())[1])
-  }
-})
-
-
-output$xvarselect <- renderUI({
-  if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
-  if (is.null(input$file)) {return(NULL)}
-  else {
-  checkboxGroupInput("xAttr", "Select X variables",
-                     setdiff(colnames(Dataset()),input$yAttr), setdiff(colnames(Dataset()),input$yAttr))
-  }
-})
-
 Dataset.temp = reactive({
-  mydata = Dataset()[,c(input$xAttr)]
+  mydata = Dataset()
 })
 
 nu1.Dataset = reactive({
@@ -78,18 +98,40 @@ nu1.Dataset = reactive({
   return(nu.data)
 })
 
+# Select variables:
+output$yvarselect <- renderUI({
+  if (identical(Datasetf(), '') || identical(Datasetf(),data.frame())) return(NULL)
+  if (is.null(input$file)) {return(NULL)}
+  else {
+  selectInput("yAttr", "Select Y variable (must be factor/categorical)",
+                     colnames(Dataset()), setdiff(colnames(Dataset()),colnames(nu1.Dataset())))
+  }
+})
+
+
+output$xvarselect <- renderUI({
+  if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
+  if (is.null(input$file)) {return(NULL)}
+  else {
+  checkboxGroupInput("xAttr", "Select X variables",
+                     setdiff(colnames(Dataset()),input$yAttr), setdiff(colnames(Dataset()),input$yAttr))
+  }
+})
+
+
 output$fxvarselect <- renderUI({
   if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
   if (is.null(input$file)) {return(NULL)}
   else {
-  checkboxGroupInput("fxAttr", "Select factor (categorical) variables in X",
-                     colnames(Dataset.temp()),setdiff(colnames(Dataset.temp()),c(colnames(nu1.Dataset()))) )
+  checkboxGroupInput("fxAttr", "Select factor (categorical) variables",
+                     colnames(Dataset.temp()[,c(input$yAttr,input$xAttr)]),
+                     setdiff(colnames(Dataset.temp()[,c(input$yAttr,input$xAttr)]),c(colnames(nu1.Dataset()))) )
   }
 })
 
 mydata = reactive({
   mydata = Dataset()[,c(input$yAttr,input$xAttr)]
-  mydata[,input$yAttr] = factor(mydata[,input$yAttr])
+  #mydata[,input$yAttr] = factor(mydata[,input$yAttr])
   if (length(input$fxAttr) >= 1){
   for (j in 1:length(input$fxAttr)){
       mydata[,input$fxAttr[j]] = factor(mydata[,input$fxAttr[j]])
@@ -112,7 +154,7 @@ pred.readdata = reactive({
 out = reactive({
 data = mydata()
 Missing1=(data[!complete.cases(data),])
-Missing=head(Missing1)
+Missing=(Missing1)
 mscount=nrow(Missing1)
 Dimensions = dim(data)
 Head = head(data)
@@ -156,6 +198,13 @@ output$missing = renderPrint({
     out()[9]
   }
 })
+
+output$missing1 = renderDataTable({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    out()[[9]]
+  }
+}, options = list(lengthMenu = c(10, 30, 50,100), pageLength = 10))
 
 output$mscount = renderPrint({
   if (is.null(input$file)) {return(NULL)}
@@ -237,8 +286,9 @@ ols = reactive({
     data = mydata()#/meanstd()[[2]]-meanstd()[[1]]
     rhs = paste(input$xAttr, collapse = "+")
     formula= as.formula(paste(input$yAttr,"~", rhs , sep=""))
-    if (input$select=="Linear") { ols = lda(formula, data = data) }
-    else if (input$select=="Quadratic") {ols = qda(formula, data = data)}
+    if (input$select=="Linear Discriminant Analysis") { ols = lda(formula, data = data) }
+    else if (input$select=="Quadratic Discriminant Analysis") {ols = qda(formula, data = data)}
+    else if (input$select=="Naive Bayes Classifier") {ols = naiveBayes(formula, data = data)}
     else {ols = rda(formula, data = data)}
   return(ols)
 })
@@ -254,18 +304,23 @@ output$confusion = renderPrint({
   if (is.null(input$file)) {return(NULL)}
   else {
     data = mydata()#/meanstd()[[2]]-meanstd()[[1]]  
-    predictions <- predict(ols(),data) 
-    class.pred = predictions$class
-    class=mydata()[,input$yAttr]
-    confusion_matrix = table(class,class.pred)
+    predictions <- predict(ols(),data)
+    if (input$select=="Naive Bayes Classifier") {Predicted.Class=predictions}
+    else {Predicted.Class = predictions$class}
+    Actual.Class=mydata()[,input$yAttr]
+    confusion_matrix = table(Predicted.Class,Actual.Class)
     accuracy = (sum(diag(confusion_matrix))/sum(confusion_matrix))
-    out = list(Confusion_matrix = confusion_matrix, Accuracy_of_Validation = accuracy)
+    out=confusionMatrix(confusion_matrix)
+    #out = list(Confusion_matrix = confusion_matrix, Accuracy_of_Validation = accuracy)
     return(out)
     }
 })
 
 predmydata =  reactive({
+  if (is.null(input$file)) {return(NULL)}
+  else {
   cbind(mydata(), predict(ols())$x)
+  }
 })
 
 output$resplot1 = renderPlot({
@@ -310,65 +365,6 @@ output$resplot3 = renderPlot({
   }
 })
 
-dup = reactive({
-  dup = which(duplicated(out()[[5]]))
-  return(dup)
-})
-
-output$dup =  renderPrint({
-  length(dup())
-})
-
-tsne_df = reactive({
-  if (is.null(input$file)) {return(NULL)}
-  else {
-    if (length(dup())==0) {
-      data = out()[[5]]
-      tsne_object = Rtsne(as.matrix(data), perplexity = input$perp, num_threads=0, max_iter=input$iter)
-    }
-    else{
-      dup = dup()
-      data = out()[[5]]
-      tsne_object = Rtsne(as.matrix(data[-dup,]), perplexity = input$perp, num_threads=0, max_iter=input$iter)
-    }
-    tsne_df1 = as.data.frame(tsne_object$Y) 
-    tsne_df = setNames(tsne_df1,c("Dim.1", "Dim.2"))
-    return(tsne_df)
-  }
-  
-})
-
-output$resplot4 = renderPlot({
-  if (is.null(input$file)) {return(NULL)}
-  else {
-    
-    dup = dup()
-    tsne_df=tsne_df()
-    if (length(dup())==0) {
-      Y_var=mydata()[,input$yAttr]  
-      ggplot(aes(x = Dim.1, y = Dim.2), data = tsne_df) +
-        geom_point(aes(colour = Y_var), size = 3)
-    }
-    else{
-      Y_var=mydata()[-dup,input$yAttr]
-      ggplot(aes(x = Dim.1, y = Dim.2), data = tsne_df) +
-        geom_point(aes(colour = Y_var), size = 3)
-    }
-  }
-})
-
-
-output$datatable = renderTable({
-  if (is.null(input$file)) {return(NULL)}
-  else {
-  data = mydata()#/meanstd()[[2]]-meanstd()[[1]]  
-  predictions <- predict(ols(),data) 
-  Class = predictions$class
-  Prob = predictions$posterior
-  head(data.frame(Pred.Class=Class,Prob.Class=Prob,mydata()),10)
-  }
-})
-
 output$datatable <- renderDataTable({
   if (is.null(input$file)) {return(NULL)}
   else {
@@ -381,23 +377,15 @@ datatable = reactive({
   else {
   data = mydata()#/meanstd()[[2]]-meanstd()[[1]]
   predictions <- predict(ols(),data) 
-  Class = predictions$class
+  if (input$select=="Naive Bayes Classifier") {Class=predictions
+  dt=data.frame(Pred.Class=Class,mydata())}
+  else {Class = predictions$class
   Prob = predictions$posterior
-  data.frame(Pred.Class=Class,Prob.Class=Prob,mydata())
+  dt=data.frame(Pred.Class=Class,Prob.Class=Prob,mydata())}
+  return(dt)
   }
 })
 
-
-output$datatablep = renderTable({
-  if (is.null(input$filep)) {return(NULL)}
-  else {
-    data = pred.readdata()#/meanstd()[[2]]-meanstd()[[1]]
-    predictions <- predict(ols(),data) 
-    Class = predictions$class
-    Prob = predictions$posterior
-    head(data.frame(Pred.Class=Class,Prob.Class=Prob,pred.readdata()),10)
-  }
-})
 
 output$datatablep <- renderDataTable({
   if (is.null(input$filep)) {return(NULL)}
@@ -411,16 +399,19 @@ datatablep = reactive({
   else {
   data = pred.readdata()#/meanstd()[[2]]-meanstd()[[1]]
   predictions <- predict(ols(),data) 
-  Class = predictions$class
+  if (input$select=="Naive Bayes Classifier") {Class=predictions
+  dt=data.frame(Pred.Class=Class,mydata())}
+  else {Class = predictions$class
   Prob = predictions$posterior
-  data.frame(Pred.Class=Class,Prob.Class=Prob,pred.readdata())
-  }
+  dt=data.frame(Pred.Class=Class,Prob.Class=Prob,mydata())}
+  return(dt)
+}
 })
 
 output$downloadData <- downloadHandler(
-  filename = function() { "califhouse.csv" },
+  filename = function() { "wholesalecustomerdata.csv" },
   content = function(file) {
-    write.csv(read.csv("data/califhouse.csv"), file, row.names=F, col.names=F)
+    write.csv(read.csv("data/wholesalecustomerdata.csv"), file, row.names=F, col.names=F)
   }
 )
 

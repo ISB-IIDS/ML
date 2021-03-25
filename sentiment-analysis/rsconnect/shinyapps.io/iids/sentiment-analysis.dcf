@@ -1,0 +1,12 @@
+name: sentiment-analysis
+title: sentiment-analysis
+username:
+account: iids
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3836313
+bundleId: 4382886
+url: https://isb-iids.shinyapps.io/sentiment-analysis/
+when: 1616471097.7581
+asMultiple: FALSE
+asStatic: FALSE

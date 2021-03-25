@@ -1,5 +1,5 @@
 ####################################################
-#      Discriminant Analysis  App                  #
+#      Classification Analysis  App                  #
 ####################################################
 
 library("shiny")
@@ -8,7 +8,7 @@ library("shiny")
 shinyUI(pageWithSidebar(
   # Header:
   #headerPanel("OLS App"),
-  headerPanel(title=div(img(src="logo.png",align = "right"), h2("Discriminant Analysis App", style="bold")), windowTitle	='Discriminant Analysis'),
+  headerPanel(title=div(img(src="logo.png",align = "right"), h2("Classification App", style="bold")), windowTitle	='Classification'),
   #titlePanel(title=div(img(src="logo.png",align='right'),"OLS App")),
   # Input in sidepanel:
   sidebarPanel(
@@ -16,12 +16,13 @@ shinyUI(pageWithSidebar(
     h4(p("Data Input")),
     fileInput("file", "Upload input data (csv file with header)"),
     selectInput("select", "Choose algorithm", 
-                c("Linear","Quadratic","Regularized"), selected = "Linear"),
+                c("Linear Discriminant Analysis","Quadratic Discriminant Analysis","Naive Bayes Classifier"), selected = "Linear LDA"),
     h4(p("Data Selection")),
     htmlOutput("yvarselect"),
     htmlOutput("xvarselect"),
  #   submitButton(text = "Apply Changes", icon("refresh")),br(),
     htmlOutput("fxvarselect"),
+    htmlOutput("samsel"),
  #   fileInput("filep", "Upload new data for prediction (csv file with header)"),
     br()
   ),
@@ -42,8 +43,10 @@ shinyUI(pageWithSidebar(
                             If any of the variables selected in explanatory variables is a factor variable, you can define that variable as factor variable just
                             by selecting that variable in the last list of variables
                            "),
-                         p("Dicriminant analysis is like a regression, for categorical outcomes. Data input required is also like regression input data file."),
-                         tags$a(href="https://en.wikipedia.org/wiki/Linear_discriminant_analysis", "-Wikipedia"),
+                         #p("Dicriminant analysis is like a regression, for categorical outcomes. Data input required is also like regression input data file."),
+                         tags$a(href="https://en.wikipedia.org/wiki/Linear_discriminant_analysis", "Discriminant Analysis - Wikipedia"),
+                         br(),br(),
+                         tags$a(href="https://en.wikipedia.org/wiki/Naive_Bayes_classifier", "Naive Bayes Classifier - Wikipedia"),
                          br(),br(),
                          # h4(p("Download Sample Input Files")),
                          downloadButton('downloadData', 'download sample data'),
@@ -56,13 +59,18 @@ shinyUI(pageWithSidebar(
                         # br(),
                         # p("*Please note that download will not work with RStudio interface. Download will work only in web-browsers."),
                          ),
-                tabPanel("Data Summary", h4("Selected Variables"), verbatimTextOutput("head"),#verbatimTextOutput("tail"),
+                tabPanel("Data Summary", #h4("Selected Variables"), verbatimTextOutput("head"),#verbatimTextOutput("tail"),
+                         h4("Uploaded Data"), 
+                         dataTableOutput("readdata"),tags$head(tags$style("tfoot {display: table-header-group;}")),br(),                         
                          h4("Data Summary of Selecetd X Variables"),verbatimTextOutput("summary"),
-                         h4("Missing Data"),verbatimTextOutput("missing"),br()),
+                         h4("Missing Data"),
+                         verbatimTextOutput("missing"),
+                         #dataTableOutput("missing1"),
+                         br()),
                # tabPanel("Correlation",
                         
-                tabPanel("Discriminant Analysis",br(), (p('Y must be factor (categorical) variable',style="color:red")),
-                         h4("Summary Discrimant Model"),verbatimTextOutput("olssummary"),
+                tabPanel("Model Output",br(), (p('Y must be factor (categorical) variable',style="color:red")),
+                         h4("Summary Model"),verbatimTextOutput("olssummary"),
                          h4("Correlation Table - Input data"), verbatimTextOutput("correlation"),
                          
                          h4("Correlation Visulization - Input Data"),
@@ -70,8 +78,10 @@ shinyUI(pageWithSidebar(
                          plotOutput("corplot"),br()
                          ),
                          
-                tabPanel("Input Data with Predictions", 
-                         h4("Confusion Matrix"),verbatimTextOutput("confusion"),br(),
+                tabPanel("Input Data with Predictions", br(), (p('Y must be factor (categorical) variable',style="color:red")),
+                         h4("Confusion Matrix"),
+                         verbatimTextOutput("confusion"),
+                         h4("Dowloand Input Data with Predictions"),#verbatimTextOutput("confusion"),br(),
                          downloadButton('downloadData2', 'Download predictions for new data'),
                          #h4("First 10 rows of predictions for new data (upload prediction data)"),
                          br(),br(),#h4('"Yhat" column is the predicted value.'),
@@ -84,21 +94,20 @@ shinyUI(pageWithSidebar(
                          # downloadButton('downloadData2', 'Download Data (Works only in browser)')
                          ),
                 
-              # tabPanel("MeanStd",h4("Mean and Std"),verbatimTextOutput("meanstd1")),
-                tabPanel("Linear Discriminant Plot",br(),
-                         verbatimTextOutput("mscount"),
-                         h4(p('Note: Y must take more than two values to calculate two discriminant axes for 
-                              plotting data (it may take a while for the plot to appear, be patient)',style="color:black")),
-                         #h4("Plotting data on primary linear discriminant axes (calculations may take a while be patient)"),
-                         (p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")),
-                         plotOutput("resplot1",height = 800),
-                         #h4("Class Scatter Plot - First & Third Discriminant Dimensions"),
-                         plotOutput("resplot2",height = 800),
-                         #h4("Class Scatter Plot - Second & Third Discriminant Dimensions"),
-                         plotOutput("resplot3",height = 800),br()
-                        # h4("Fitted Values vs Residuals - Input Data"), plotOutput("resplot2",height = 800),
-                        # h4("Residuals plot - Input Data"), plotOutput("resplot1",height = 800)
-                        ),
+                # tabPanel("Discriminant Plot",
+                #          h4(p('Note: Y must have more than two classes to calculate two discriminant axes for 
+                #               plotting data (it may take a while for the plot to appear, be patient)',style="color:black")),
+                #          #h4("Plotting data on primary linear discriminant axes (calculations may take a while be patient)"),
+                #          (p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")),
+                #          plotOutput("resplot1",height = 800),
+                #          #h4("Class Scatter Plot - First & Third Discriminant Dimensions"),
+                #          plotOutput("resplot2",height = 800),
+                #          #h4("Class Scatter Plot - Second & Third Discriminant Dimensions"),
+                #          plotOutput("resplot3",height = 800),br()
+                #         # h4("Fitted Values vs Residuals - Input Data"), plotOutput("resplot2",height = 800),
+                #         # h4("Residuals plot - Input Data"), plotOutput("resplot1",height = 800)
+                #         ),
+               
                 tabPanel("Prediction New Data",
                          h4("Upload new data for prediction, it should be in the same format as input data file (csv file with header)"),
                          fileInput("filep",""),
@@ -112,20 +121,8 @@ shinyUI(pageWithSidebar(
                          # ,br(),tableOutput("datatablep"),
                          # h4("Download new data with predictions"),
                          # downloadButton('downloadData1', 'download predictions for new data')      
-                         ),
-              tabPanel("Class Visualization",br(),
-                       numericInput("perp", "Set Perplexity Parameter",25 ,min=5,max=95, step=10),
-                       numericInput("iter", "Set Max Iterations",500, min=500, max=5000, step=500),
-                       h4(p('Note: projecting numerical input data in two dimensions; it takes a while, be patient.',style="color:red")),
-                       #h4("Visualizing Data in 2 Dimensions (it takes quite a while, be paitent)."),
-                       tags$a(href="https://en.wikipedia.org/wiki/T-distributed_stochastic_neighbor_embedding", "-Wikipedia"),br(),
-                       br(),
-                       #(p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")),
-                       plotOutput("resplot4",height = 800)
-                       #plotOutput("resplot5",height = 800),
-                       #plotOutput("resplot6",height = 800)
-                      )
-                         
+                         )
+
                 )
       ) 
     ) 

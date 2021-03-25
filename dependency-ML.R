@@ -8,7 +8,6 @@ try(require("wordcloud") || install.packages("wordcloud"))
 try(require("slam") || install.packages("slam"))
 try(require("stringi") || install.packages("stringi"))
 try(require("tidytext") || install.packages("tidytext"))
-if (!require("textrank")) {install.packages("textrank")}
 try(require("tidyr") || install.packages("tidyr"))
 try(require("igraph")|| install.packages("igraph"))
 try(require("visNetwork")|| install.packages('visNetwork'))
@@ -36,7 +35,11 @@ try(require("party")||install.packages("party"))
 try(require("partykit")||install.packages("partykit"))
 try(require("fmsb")||install.packages("fmsb"))
 try(require("PerformanceAnalytics")||install.packages("PerformanceAnalytics"))
+try(require("sparkline")||install.packages("sparkline"))
 
+if (!require("plot3D")) {install.packages("plot3D")}
+if (!require("Spectrum")) {install.packages("Spectrum")}
+if(!require("textrank")) {install.packages("textrank")}
 if(!require("Rtsne")) {install.packages("Rtsne")}
 if(!require("randomcoloR")) {install.packages("randomcoloR")}
 if(!require("shinyWidgets")) {install.packages("shinyWidgets")}
@@ -63,8 +66,4 @@ if(!require("mda")) {install.packages("mda")}
 if(!require("klaR")) {install.packages("klaR")}
 if(!require("gridExtra")) {install.packages("gridExtra")}
 if(!require("tesseract")) {install.packages("tesseract")}
-
-
-
-
-
+warnings()

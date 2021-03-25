@@ -1,0 +1,12 @@
+name: text-network
+title: text-network
+username:
+account: iids
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3836306
+bundleId: 4382882
+url: https://isb-iids.shinyapps.io/text-network/
+when: 1616470966.80481
+asMultiple: FALSE
+asStatic: FALSE

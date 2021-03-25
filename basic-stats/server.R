@@ -14,7 +14,7 @@ if(!require("fastDummies")) {install.packages("fastDummies")}
 if(!require("magrittr")) {install.packages("magrittr")} 
 if(!require("dplyr")) {install.packages("dplyr")}
 if(!require("ggpubr")) {install.packages("ggpubr")}
-
+if(!require("mice")) {install.packages("mice")}
 
 library(shiny)
 library(pastecs)
@@ -29,6 +29,7 @@ library(fastDummies)
 library(magrittr)
 library(dplyr)
 library(ggpubr)
+library(mice)
 
 # library(gplot)
 
@@ -41,6 +42,20 @@ Dataset <- reactive({
     return(Dataset)
   }
 })
+
+output$samsel <- renderUI({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    selectInput("obs", "Select sub sample", c("quick run, 500 obs", "full dataset"), selected = "quick run, 500 obs")
+  }
+})
+
+output$readdata <- renderDataTable({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    Dataset()
+  }
+}, options = list(lengthMenu = c(5, 30, 50,100), pageLength = 5))
 
 output$xvarselect <- renderUI({
   if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
@@ -77,7 +92,7 @@ output$fxvarselect <- renderUI({
   }
 })
 
-mydata = reactive({
+mydata1 = reactive({
   mydata = Dataset()[,c(input$xAttr)]
 
   if (length(input$fxAttr) >= 1){
@@ -86,14 +101,41 @@ mydata = reactive({
   }
   }
   return(mydata)
-  
+})
+
+output$imputemiss <- renderUI({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+  if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
+  if (1==0) {p("error")}
+  else {
+    selectInput("imputemiss", "Impute missing values", 
+                c("Yes","No"), selected = "No")
+  }}
+})
+
+output$imout <- renderUI({
+  if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
+  if (input$imputemiss=="No") {return(NULL)}
+  else {
+    p("Note: missing values imputed - check 'Missing Data' tab",style="color:red")
+  }
+})
+
+mydata = reactive({
+  if (input$imputemiss=="No") {return(mydata1())}
+  mydata = mydata1()
+  mice_mod = mice(mydata, printFlag=FALSE)
+  mydataimp <- complete(mice_mod)
+  return(mydataimp)
 })
 
 
 out = reactive({
 data = mydata()
 Missing1=(data[!complete.cases(data),])
-Missing=head(Missing1)
+Missing2=head(Missing1)
+Missing=(Missing1)
 mscount=nrow(Missing1)
 Dimensions = dim(data)
 Head = head(data)
@@ -113,7 +155,8 @@ Summary = list(Numeric.data = round(stat.desc(nu.data)[c(4,5,6,8,9,12,13),] ,4),
 
 a = seq(from = 0, to=200,by = 4)
 j = length(which(a < ncol(nu.data)))
-out = list(Dimensions = Dimensions,Summary =Summary ,Tail=Tail,fa.data,nu.data,a,j, Head=Head,MissingDataRows=Missing,missing.data.rows.count=mscount)
+out = list(Dimensions = Dimensions,Summary =Summary ,Tail=Tail,fa.data,nu.data,a,j, Head=Head,
+           MissingDataRows=Missing,missing.data.rows.count=mscount,Missing.Observations=Missing2)
 return(out)
 })
 
@@ -131,12 +174,20 @@ output$tail = renderPrint({
   }
 })
 
-output$missing = renderPrint({
+output$missing2 = renderPrint({
   if (is.null(input$file)) {return(NULL)}
   else {
-    out()[9]
+    out()[11]
   }
 })
+
+output$missing1 = renderDataTable({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    out()[[9]]
+  }
+}, options = list(lengthMenu = c(10, 30, 50,100), pageLength = 10))
+
 
 output$mscount = renderPrint({
   if (is.null(input$file)) {return(NULL)}
@@ -165,14 +216,14 @@ output$outselect <- renderUI({
 output$hist = renderPlot({
   if (is.null(input$file)) {return(NULL)}
   else {
-    hist(Dataset()[,input$rAttr])
+    hist(mydata()[,input$rAttr])
   }
 })
 
 output$outlier = renderPrint({
   if (is.null(input$file)) {return(NULL)}
   else {
-    rosnerTest(Dataset()[,input$rAttr])
+    rosnerTest(mydata()[,input$rAttr])
   }
 })
 
@@ -182,27 +233,41 @@ output$heatmap = renderPlot({
     scale_fill_gradient2(limits=c(-1, 1))
 })
 
-plotsample =  reactive({
-  sizedata= nrow(mydata())
-  smp=(
-    if (sizedata>500) {500} 
-    else {
-      sizedata
-          }
-      )
-  sample( 1:sizedata, smp )
+# plotsample =  reactive({
+#   sizedata= nrow(mydata())
+#     if (sizedata>500) {smp=500} 
+#     else {
+#       smp=sizedata
+#           }
+#   sample( 1:sizedata, smp )
+# })
+
+
+plot_data1 <- reactive({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    my_data = out()[[5]]
+    if (input$obs == "full dataset") { return(my_data) }
+    else{
+      if (nrow(my_data)>500){
+        set.seed(1234)
+        testsample= sample(1:nrow(my_data), 500 )
+        Dataset1=my_data[testsample,]
+        return(Dataset1)}
+      else {return(my_data)}
+    }}
 })
 
-plot_data = reactive({
-  my_data = out()[[5]]
-  my_data[plotsample(),]
-})
+# plot_data = reactive({
+#   my_data = out()[[5]]
+#   my_data[plotsample1(),]
+# })
 
 
 output$heatmap1 = renderPlot({ 
   if (is.null(input$file)) {return(NULL)}
   else {
-  chart.Correlation(plot_data(),hitogram=TRUE,pch="+")
+  chart.Correlation(plot_data1(),hitogram=TRUE,pch="+")
   }
 })
 

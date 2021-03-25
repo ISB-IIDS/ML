@@ -44,6 +44,13 @@ library(e1071)
     }
   })
   
+  output$readdata <- renderDataTable({
+    if (is.null(input$file)) {return(NULL)}
+    else {
+      Dataset()
+    }
+  }, options = list(lengthMenu = c(10, 50, 100), pageLength = 10))
+  
   pred.readdata <- reactive({
     if (is.null(input$filep)) { return(NULL) }
     else{
@@ -57,7 +64,7 @@ library(e1071)
     if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
     if (is.null(input$file)) { return(NULL) }
     else{
-    selectInput("IndividualAttr", "Select individual ID variable",
+    selectInput("IndividualAttr", "Select individual/observation ID variable",
                 colnames(Dataset()), colnames(Dataset())[1])
     }
     })
@@ -66,7 +73,7 @@ library(e1071)
     if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
     if (is.null(input$file)) { return(NULL) }
     else{
-    selectInput("ChoiceAttr", "Select choice/outcome variable",
+    selectInput("ChoiceAttr", "Select choice/outcome (0/1) variable",
                # colnames(Dataset()), colnames(Dataset())[1])
                 setdiff(colnames(Dataset()),input$IndividualAttr), setdiff(colnames(Dataset()),input$IndividualAttr)[1])
     }
@@ -262,29 +269,22 @@ ind.features=paste(input$IndividualfeaturesAttr,collapse = "+")
     }
   })
   
-  output$probablities1 = renderPrint({
-    if (is.null(input$file)) {return(NULL)}
-    else {
-      data.fit=summary(fitted(ols(),outcome=FALSE))
-      (data.fit)
-    }
-  })
-  
-  output$probablities = renderPrint({
+  output$probablities = renderDataTable({
     if (is.null(input$file)) {return(NULL)}
     else {
   data.fit=(fitted(object = ols(), outcome=FALSE))
     trial=Rfast::rowMaxs(data.fit,value = FALSE)
     data.fit=as.data.frame(data.fit)
-    data.fit$predict=colnames(data.fit)[trial]
+    data.fit$predicted=colnames(data.fit)[trial]
 
   choice.col=(as.vector(Dataset()[,input$ChoiceAttr]))
   data.fit$actual=as.vector(Dataset()[which(choice.col==1),input$AlternativesAttr])
   data.fit$obs_ID=as.vector(Dataset()[which(choice.col==1),input$IndividualAttr])
   #data.try=as.data.frame(data.fit)
-  head(data.fit,10)
+  data.fit
     }
-})
+  }, options = list(lengthMenu = c(10, 50, 100), pageLength = 10))
+  
   output$ROC = renderPlot({
     if (is.null(input$file)) {return(NULL)}
     else {  
