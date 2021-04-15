@@ -13,6 +13,8 @@ if (!require("MASS")) {install.packages("MASS")}
 if (!require("caret")) {install.packages("caret")}
 #if (!require("Rtsne")) {install.packages("Rtsne")}
 if (!require("e1071")) {install.packages("e1071")}
+if (!require("mice")) {install.packages("mice")}
+if (!require("ggfortify")) {install.packages("ggfortify")}
 
 library(shiny)
 library(pastecs)
@@ -25,6 +27,8 @@ library(hydroGOF)
 library(MASS)
 library(e1071)
 library(caret)
+library(mice)
+library(ggfortify)
 
 shinyServer(function(input, output,session) {
   
@@ -38,12 +42,13 @@ Datasetf <- reactive({
 
 output$samsel <- renderUI({
   if (is.null(input$file)) {return(NULL)}
-  else {
+  else 
+    {
     selectInput("obs", "Select sub sample", c("quick run, 1,000 obs", "10,000 obs", "full dataset"), selected = "quick run, 1,000 obs")
   }
 })
 
-Dataset <- reactive({
+Datasetf1 <- reactive({
   if (is.null(input$file)) {return(NULL)}
   else {
   if (input$obs=="full dataset") { return(Datasetf()) }
@@ -67,6 +72,39 @@ Dataset <- reactive({
   } } 
 })
 
+output$imputemiss <- renderUI({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    #if (identical(Datasetf(), '') || identical(Datasetf(),data.frame())) return(NULL)
+    if (1==0) {p("error")}
+    else {
+      selectInput("imputemiss", "Impute missing values or drop missing value rows", 
+                  c("do not impute or drop rows", "impute missing values", "drop missing value rows"), selected = "drop missing value rows")
+    }}
+})
+
+output$imout <- renderUI({
+  if (is.null(input$file)) {return(NULL)}
+  if (input$imputemiss == "do not impute or drop rows") {return(NULL)}
+  else if ((input$imputemiss == "impute missing values")) {
+    p("Note: missing values imputed, check options in the panel on the left",style="color:red")
+  }
+  else { p("Note: missing value rows dropped, check options in the panel on the left",style="color:red") }
+})
+
+Dataset = reactive({
+  if (input$imputemiss == "do not impute or drop rows") 
+  { mydataimp=Datasetf1() }
+  else if (input$imputemiss == "impute missing values") 
+  { mydata = Datasetf1()
+  mice_mod = mice(mydata, printFlag=FALSE)
+  mydataimp <- complete(mice_mod) }
+  else # (input$imputemiss == "drop missing value rows") 
+  { mydata = Datasetf1()
+  mydataimp = na.omit(mydata)  }
+  return(mydataimp)
+})
+
 output$readdata <- renderDataTable({
   if (is.null(input$file)) {return(NULL)}
   else {
@@ -82,8 +120,15 @@ Datasetp <- reactive({
   }
 })
 
+output$readdatap <- renderDataTable({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    Datasetp()
+  }
+}, options = list(lengthMenu = c(5, 30, 50,100), pageLength = 5))
+
 Dataset.temp = reactive({
-  mydata = Dataset()
+  mydata = Datasetf1()
 })
 
 nu1.Dataset = reactive({
@@ -104,33 +149,74 @@ output$yvarselect <- renderUI({
   if (is.null(input$file)) {return(NULL)}
   else {
   selectInput("yAttr", "Select Y variable (must be factor/categorical)",
-                     colnames(Dataset()), setdiff(colnames(Dataset()),colnames(nu1.Dataset())))
+                     colnames(Datasetf1()), setdiff(colnames(Datasetf1()),colnames(nu1.Dataset()))[1])
   }
 })
 
+output$yout <- renderUI({
+  if (identical(Datasetf(), '') || identical(Datasetf(),data.frame())) return(NULL)
+  p("Y is",input$yAttr,style="color:red")
+})
 
+output$yout1 <- renderUI({
+  if (identical(Datasetf(), '') || identical(Datasetf(),data.frame())) return(NULL)
+  p("Prediction Class: ",input$yAttr,style="color:red")
+})
+
+output$yout3 <- renderUI({
+  if (identical(Datasetf(), '') || identical(Datasetf(),data.frame())) return(NULL)
+  p("Predicted Class: ",input$yAttr,style="color:red")
+})
+
+
+   output$warning <- renderUI({
+     if (identical(Datasetf(), '') || identical(Datasetf(),data.frame())) return(NULL)
+     if (class(Datasetf1()[,input$yAttr])=="numeric") {
+     (p('Y must be factor (categorical) variable',style="color:red"))
+     }
+     else return(NULL)
+   })
+     
 output$xvarselect <- renderUI({
-  if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
+  if (identical(Datasetf(), '') || identical(Datasetf(),data.frame())) return(NULL)
   if (is.null(input$file)) {return(NULL)}
   else {
   checkboxGroupInput("xAttr", "Select X variables",
-                     setdiff(colnames(Dataset()),input$yAttr), setdiff(colnames(Dataset()),input$yAttr))
+                     setdiff(colnames(Datasetf1()),input$yAttr), setdiff(colnames(Datasetf1()[,-1]),input$yAttr))
   }
 })
 
 
 output$fxvarselect <- renderUI({
-  if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
+  if (identical(Datasetf(), '') || identical(Datasetf(),data.frame())) return(NULL)
   if (is.null(input$file)) {return(NULL)}
   else {
-  checkboxGroupInput("fxAttr", "Select factor (categorical) variables",
-                     colnames(Dataset.temp()[,c(input$yAttr,input$xAttr)]),
-                     setdiff(colnames(Dataset.temp()[,c(input$yAttr,input$xAttr)]),c(colnames(nu1.Dataset()))) )
+  checkboxGroupInput("fxAttr", "Select factor (categorical) variables in X",
+                     colnames(Dataset.temp()[,c(input$xAttr)]),
+                     setdiff(colnames(Dataset.temp()[,c(input$xAttr)]),c(colnames(nu1.Dataset()))) )
   }
 })
 
-mydata = reactive({
+output$fyvarselect <- renderUI({
+  if (identical(Datasetf(), '') || identical(Datasetf(),data.frame())) return(NULL)
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    checkboxGroupInput("fyAttr", "Select Y as factor (categorical) variable",
+                       input$yAttr,
+                       setdiff(colnames(Dataset.temp()),c(colnames(nu1.Dataset()))) )
+  }
+})
+
+mydatay = reactive({
   mydata = Dataset()[,c(input$yAttr,input$xAttr)]
+    if (length(input$fyAttr) >= 1){
+      mydata[,input$yAttr] = factor(mydata[,input$yAttr])
+  }
+  return(mydata)
+})
+
+mydata = reactive({
+  mydata = mydatay()[,c(input$yAttr,input$xAttr)]
   #mydata[,input$yAttr] = factor(mydata[,input$yAttr])
   if (length(input$fxAttr) >= 1){
   for (j in 1:length(input$fxAttr)){
@@ -138,14 +224,18 @@ mydata = reactive({
   }
   }
   return(mydata)
-  
 })
 
 pred.readdata = reactive({
-  mydata = Datasetp()
-  if (length(input$fxAttr) >= 1){
-    for (j in 1:length(input$fxAttr)){
-      mydata[,input$fxAttr[j]] = factor(mydata[,input$fxAttr[j]])
+  fvar=setdiff(input$fxAttr,input$yAttr)
+  
+  if ((input$yAttr %in%  colnames(Datasetp()) ) ) {
+    mydata = Datasetp()[,c(input$yAttr,input$xAttr)]}
+  else {mydata = Datasetp()[,c(input$xAttr)]}
+  
+  if (length(fvar) >= 1){
+    for (j in 1:length(fvar)){
+      mydata[,fvar[j]] = factor(mydata[,fvar[j]])
     }
   }
   return(mydata)
@@ -196,6 +286,20 @@ output$missing = renderPrint({
   if (is.null(input$file)) {return(NULL)}
   else {
     out()[9]
+  }
+})
+
+output$hist = renderPlot({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    hist(mydata())#[,input$xAttr],main=paste("Histogram of" ,input$xAttr), xlab=input$xAttr)
+  }
+})
+
+output$dens = renderPlot({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    datadensity(out()[[5]])#[,input$xAttr],main=paste("Histogram of" ,input$xAttr), xlab=input$xAttr)
   }
 })
 
@@ -272,6 +376,14 @@ output$correlation = renderPrint({
 output$corplot = renderPlot({
   if (is.null(input$file)) {return(NULL)}
   else {
+    #pairs(mydata())
+    pairs(out()[[5]],pch=20, col="grey")
+  }
+})
+
+output$corplot1 = renderPlot({
+  if (is.null(input$file)) {return(NULL)}
+  else {
   my_data = out()[[5]]
   cor.mat <- round(cor(my_data),2)
   corrplot(cor.mat, 
@@ -286,9 +398,10 @@ ols = reactive({
     data = mydata()#/meanstd()[[2]]-meanstd()[[1]]
     rhs = paste(input$xAttr, collapse = "+")
     formula= as.formula(paste(input$yAttr,"~", rhs , sep=""))
-    if (input$select=="Linear Discriminant Analysis") { ols = lda(formula, data = data) }
-    else if (input$select=="Quadratic Discriminant Analysis") {ols = qda(formula, data = data)}
-    else if (input$select=="Naive Bayes Classifier") {ols = naiveBayes(formula, data = data)}
+    if (input$select=="Linear Discriminant Classification") { ols = lda(formula, data = data) }
+    else if (input$select=="Quadratic Discriminant Classification") {ols = qda(formula, data = data)}
+    else if (input$select=="Naive Bayes Classification") {ols = naiveBayes(formula, data = data)}
+    else if (input$select=="Support Vector Machine") {ols = svm(formula, data = data)}
     else {ols = rda(formula, data = data)}
   return(ols)
 })
@@ -304,8 +417,9 @@ output$confusion = renderPrint({
   if (is.null(input$file)) {return(NULL)}
   else {
     data = mydata()#/meanstd()[[2]]-meanstd()[[1]]  
-    predictions <- predict(ols(),data)
-    if (input$select=="Naive Bayes Classifier") {Predicted.Class=predictions}
+    predictions <- predict(ols(),newdata  = data)
+    if (input$select=="Naive Bayes Classification") {Predicted.Class=predictions}
+    else if (input$select=="Support Vector Machine") {Predicted.Class=predictions}
     else {Predicted.Class = predictions$class}
     Actual.Class=mydata()[,input$yAttr]
     confusion_matrix = table(Predicted.Class,Actual.Class)
@@ -316,11 +430,70 @@ output$confusion = renderPrint({
     }
 })
 
-predmydata =  reactive({
+output$confusion1 = renderPrint({
+  if (is.null(input$filep)) {return(NULL)}
+  if ((input$yAttr %in%  colnames(pred.readdata()) ) ) {
+    data = pred.readdata()#/meanstd()[[2]]-meanstd()[[1]]  
+    predictions <- predict(ols(),newdata  = data)
+    if (input$select=="Naive Bayes Classification") {Predicted.Class=predictions}
+    else if (input$select=="Support Vector Machine") {Predicted.Class=predictions}
+    else {Predicted.Class = predictions$class}
+    Actual.Class=pred.readdata()[,input$yAttr]
+    confusion_matrix = table(Predicted.Class,Actual.Class)
+    accuracy = (sum(diag(confusion_matrix))/sum(confusion_matrix))
+    out=confusionMatrix(confusion_matrix)
+    #out = list(Confusion_matrix = confusion_matrix, Accuracy_of_Validation = accuracy)
+    return(out)
+  }
+})
+
+datatable = reactive({
   if (is.null(input$file)) {return(NULL)}
   else {
-  cbind(mydata(), predict(ols())$x)
+    data = mydata()#/meanstd()[[2]]-meanstd()[[1]]
+    predictions <- predict(ols(),newdata = data ) 
+    if (input$select=="Naive Bayes Classification") {
+      Class=predictions
+      #Prob <- predict(ols(),newdata  = data, type="raw")
+      dt=data.frame(Pred.Class=Class,data)}
+    else if (input$select=="Support Vector Machine") {
+      Class=predictions
+      #Prob <- predict(ols(),newdata  = data, type="raw")
+      dt=data.frame(Pred.Class=Class,data)}
+    else {Class = predictions$class
+    Prob = predictions$posterior
+    dt=data.frame(Pred.Class=Class,Prob=Prob,data)}
+    return(dt)
   }
+})
+
+datatablep = reactive({
+  if (is.null(input$filep)) {return(NULL)}
+  else {
+    data = pred.readdata()#/meanstd()[[2]]-meanstd()[[1]]
+    predictions <- predict(ols(),newdata = data) 
+    if (input$select=="Naive Bayes Classification") {
+      Class=predictions
+      #Prob <- predict(ols(),newdata  = data, type="raw")
+      dt=data.frame(Pred.Class=Class,data)}
+    else if (input$select=="Support Vector Machine") {
+      Class=predictions
+      #Prob <- predict(ols(),newdata  = data, type="raw")
+      dt=data.frame(Pred.Class=Class,data)}
+    else {
+      Class = predictions$class
+      Prob = predictions$posterior
+      dt=data.frame(Pred.Class=Class,Prob=Prob,data)}
+    return(dt)
+  }
+})
+
+output$pcaplot = renderPlot({
+  if (is.null(input$file)) {return(NULL)}
+  colnames
+  #data=out()[[5]]
+  pca_res = prcomp(out()[[5]], scale. = TRUE)
+  autoplot(pca_res, data = mydata(), colour = input$yAttr )
 })
 
 output$resplot1 = renderPlot({
@@ -372,20 +545,6 @@ output$datatable <- renderDataTable({
   }
 }, options = list(lengthMenu = c(5, 30, 50,100), pageLength = 30))
 
-datatable = reactive({
-  if (is.null(input$file)) {return(NULL)}
-  else {
-  data = mydata()#/meanstd()[[2]]-meanstd()[[1]]
-  predictions <- predict(ols(),data) 
-  if (input$select=="Naive Bayes Classifier") {Class=predictions
-  dt=data.frame(Pred.Class=Class,mydata())}
-  else {Class = predictions$class
-  Prob = predictions$posterior
-  dt=data.frame(Pred.Class=Class,Prob.Class=Prob,mydata())}
-  return(dt)
-  }
-})
-
 
 output$datatablep <- renderDataTable({
   if (is.null(input$filep)) {return(NULL)}
@@ -394,40 +553,26 @@ output$datatablep <- renderDataTable({
   }
 }, options = list(lengthMenu = c(5, 30, 50,100), pageLength = 30))
 
-datatablep = reactive({
-  if (is.null(input$filep)) {return(NULL)}
-  else {
-  data = pred.readdata()#/meanstd()[[2]]-meanstd()[[1]]
-  predictions <- predict(ols(),data) 
-  if (input$select=="Naive Bayes Classifier") {Class=predictions
-  dt=data.frame(Pred.Class=Class,mydata())}
-  else {Class = predictions$class
-  Prob = predictions$posterior
-  dt=data.frame(Pred.Class=Class,Prob.Class=Prob,mydata())}
-  return(dt)
-}
-})
-
 output$downloadData <- downloadHandler(
-  filename = function() { "wholesalecustomerdata.csv" },
+  filename = function() { "iris.csv" },
   content = function(file) {
-    write.csv(read.csv("data/wholesalecustomerdata.csv"), file, row.names=F, col.names=F)
+    write.csv(read.csv("data/iris.csv"), file, row.names=F, col.names=F)
+  }
+)
+
+output$downloadDatap <- downloadHandler(
+  filename = function() { "Predicted Data.csv" },
+  content = function(file) {
+    if (identical(Datasetp(), '') || identical(Datasetp(),data.frame())) return(NULL)
+    write.csv(datatablep(), file, row.names=F, col.names=F)
   }
 )
 
 output$downloadData1 <- downloadHandler(
-  filename = function() { "New Data With Prediction.csv" },
-  content = function(file) {
-    if (identical(Datasetp(), '') || identical(Datasetp(),data.frame())) return(NULL)
-    write.csv(prediction(), file, row.names=F, col.names=F)
-  }
-)
-
-output$downloadData2 <- downloadHandler(
   filename = function() { "Input Data With Prediction.csv" },
   content = function(file) {
     if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
-    write.csv(inputprediction(), file, row.names=F, col.names=F)
+    write.csv(datatable(), file, row.names=F, col.names=F)
   }
 )
 

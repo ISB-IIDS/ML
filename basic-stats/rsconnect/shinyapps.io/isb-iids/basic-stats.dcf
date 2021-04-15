@@ -1,12 +1,12 @@
 name: basic-stats
-title: basic-stats
+title:
 username:
-account: iids
+account: isb-iids
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3507042
-bundleId: 4464105
+bundleId: 4426938
 url: https://isb-iids.shinyapps.io/basic-stats/
-when: 1618294047.65835
+when: 1617448258.48357
 asMultiple: FALSE
 asStatic: FALSE

@@ -9,7 +9,10 @@ if (!require("qgraph")) {install.packages("qgraph")}
 if (!require("corrplot")) {install.packages("corrplot")}
 if (!require("dplyr")) {install.packages("dplyr")}
 if (!require("DT")) {install.packages("DT")}
+if (!require("mice")) {install.packages("mice")}
 
+if (!require("tidyr")) {install.packages("tidyr")} # gather()
+library("tidyr")
 
 library("shiny")
 library("pastecs")
@@ -19,6 +22,8 @@ library("corrplot")
 library("dplyr")
 library("DT")
 library("Hmisc")
+library("mice")
+
 
 
 shinyServer(function(input, output) {
@@ -31,7 +36,7 @@ shinyServer(function(input, output) {
     }
   })
   
-  Dataset <- reactive({
+  Datasetf <- reactive({
     if (is.null(input$file)) { return(NULL) }
     else{
       Dataset1 = Dataset0()
@@ -42,7 +47,71 @@ shinyServer(function(input, output) {
         }
   })
   
-  nu.Dataset = reactive({
+  output$samsel <- renderUI({
+    if (is.null(input$file)) {return(NULL)}
+    else {
+      selectInput("obs", "Select sub sample", c("quick run, 1,000 obs", "10,000 obs", "full dataset"), selected = "quick run, 1,000 obs")
+    }
+  })
+  
+  Datasetf1 <- reactive({
+    if (is.null(input$file)) {return(NULL)}
+    else {
+      if (input$obs=="full dataset") { return(Datasetf()) }
+      else if(input$obs=="10,000 obs") 
+      {
+        if (nrow(Datasetf())>10000){
+          set.seed(1234)
+          testsample= sample(1:nrow(Datasetf()), 10000 )
+          Dataset1=Datasetf()[testsample,]
+          return(Dataset1)}
+        else {return(Datasetf())}
+      }
+      else (input$obs=="1,000 obs")
+      {
+        if (nrow(Datasetf())>1000){
+          set.seed(1234)
+          testsample= sample(1:nrow(Datasetf()), 1000 )
+          Dataset1=Datasetf()[testsample,]
+          return(Dataset1)}
+        else {return(Datasetf())}
+      }  }
+  })
+  
+  output$imputemiss <- renderUI({
+    if (is.null(input$file)) {return(NULL)}
+    else {
+      #if (identical(Datasetf(), '') || identical(Datasetf(),data.frame())) return(NULL)
+      if (1==0) {p("error")}
+      else {
+        selectInput("imputemiss", "Impute missing values or drop missing value rows", 
+                    c("do not impute or drop rows", "impute missing values", "drop missing value rows"), selected = "drop missing value rows")
+      }}
+  })
+  
+  output$imout <- renderUI({
+    if (identical(Datasetf(), '') || identical(Datasetf(),data.frame())) return(NULL)
+    if (input$imputemiss == "do not impute or drop rows") {return(NULL)}
+    else if ((input$imputemiss == "impute missing values")) {
+      p("Note: missing values imputed",style="color:red")
+    }
+    else { p("Note: missing value rows dropped",style="color:red") }
+  })
+  
+  Dataset = reactive({
+    if (input$imputemiss == "do not impute or drop rows") 
+    { mydataimp=Datasetf1() }
+    else if (input$imputemiss == "impute missing values") 
+    { mydata = Datasetf1()
+    mice_mod = mice(mydata, printFlag=FALSE)
+    mydataimp <- complete(mice_mod) }
+    else # (input$imputemiss == "drop missing value rows") 
+    { mydata = Datasetf1()
+    mydataimp = na.omit(mydata)  }
+    return(mydataimp)
+  })
+  
+    nu.Dataset = reactive({
     data = Dataset()[,1:ncol(Dataset())]
     Class = NULL
     for (i in 1:ncol(data)){
@@ -72,11 +141,11 @@ fname <- reactive({
 output$colList <- renderUI({
   if (is.null(input$file)) {return(NULL)}
   else {
-  varSelectInput("selVar",label = "Select Variables",data = Dataset(),multiple = TRUE,selectize = TRUE,selected = colnames(nu.Dataset()))
+  varSelectInput("selVar",label = "Select variables",data = Datasetf1(),multiple = TRUE,selectize = TRUE,selected = colnames(nu.Dataset()))
   }
     })
 
-filtered_dataset <- reactive({if (is.null(input$file)) { return(NULL) }
+filtered_dataset1 <- reactive({if (is.null(input$file)) { return(NULL) }
   else{
     Dataset <- Dataset() %>% dplyr::select(!!!input$selVar)
     return(Dataset)
@@ -88,7 +157,7 @@ filtered_dataset <- reactive({if (is.null(input$file)) { return(NULL) }
 #                                       })
 
 out = reactive({
-  data = filtered_dataset()
+  data = filtered_dataset1()
   Missing1=(data[!complete.cases(data),])
   Missing=head(Missing1)
   mscount=nrow(Missing1)
@@ -112,6 +181,66 @@ out = reactive({
   j = length(which(a < ncol(nu.data)))
   out = list(Dimensions=Dimensions, Summary=Summary, Tail=Tail, fa.data, nu.data, a, j, Head=Head, MissingDataRows=Missing, missing.data.rows.count=mscount)
   return(out)
+})
+
+# norm_dataset = reactive({
+#   x00 = nu.Dataset()
+#   if (input$scale == "yes"){
+#     x0 = x00
+#     x01 = scale(x0, scale = T)
+#     dstd = data.frame(x01)}
+#   else {dstd=data.frame(x00)}
+#   #colnames(dstd) = c(colnames(x01))
+#   return(dstd)
+# })
+# 
+# filtered_dataset = reactive({
+#   x00 = norm_dataset() %>% dplyr::select(!!!input$selVar)
+#   return(x00)
+# })
+# 
+# 
+# output$downList <- renderUI({
+#   if (is.null(input$file)) {return(NULL)}
+#   else {
+#     varSelectInput("downVar",label = "Select variables for download data",
+#                    data = nu.Dataset(),multiple = TRUE,selectize = TRUE,selected = colnames(nu.Dataset()))
+#   }
+# })
+# 
+# outdataset <- reactive({if (is.null(input$file)) { return(NULL) }
+#   else{
+#     outdataset <- norm_dataset() %>% dplyr::select(!!!input$downVar)
+#     return(outdataset)
+#   }})
+# 
+# output$scldt = renderPrint({
+#   if (is.null(input$file)) {return(NULL)}
+#   else {
+#     nu.data = outdataset() 
+#     #fa.data = data[,fa] 
+#     list(Note = "Usually, it is a good practice to standardize the data before running cluster analysis (mean 0 and variance 1)", Summary.Standardize.Data = round(stat.desc(nu.data)[c(4,5,6,8,9,12,13),] ,5))
+#   }
+# })
+
+filtered_dataset <- reactive({if (is.null(input$file)) { return(NULL) }
+  else{
+    Dataset <- out()[[5]]
+    return(Dataset)
+  }})
+
+output$hist = renderPlot({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    hist(filtered_dataset1())#[,input$xAttr],main=paste("Histogram of" ,input$xAttr), xlab=input$xAttr)
+  }
+})
+
+output$dens = renderPlot({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    datadensity(out()[[5]])#[,input$xAttr],main=paste("Histogram of" ,input$xAttr), xlab=input$xAttr)
+  }
 })
 
 output$missing = renderPrint({
@@ -142,7 +271,22 @@ output$summary = renderPrint({
   }
 })
 
+output$correlation = renderPrint({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    round(cor(out()[[5]], use = "pairwise.complete.obs"),4)
+  }
+})
+
 output$corplot = renderPlot({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    #pairs(out()[[5]])
+    pairs(out()[[5]],pch=20, col="grey")
+  }
+})
+
+output$corplot1 = renderPlot({
   if (is.null(input$file)) { return(NULL) }
     else{
       my_data = filtered_dataset()
@@ -172,7 +316,8 @@ nS = reactive ({
 output$fselect <- renderUI({
   if (is.null(input$file)) { return(NULL) }
   else{
-  numericInput("fselect", "Number of Factors:", 2)  # unlist((nS())[1])[3])
+    if (unlist((nS())[1])[1]==1){ nfac= unlist((nS())[1])[3]} else {nfac = unlist((nS())[1])[1]}
+  numericInput("fselect", "Number of factors", nfac)
   }
   })
 
@@ -207,11 +352,11 @@ output$xaxis <- renderUI({
       list = c(list, temp)
     }
     
-    selectInput("xaxis", "Choose Factor for plotting on X axis",
+    selectInput("xaxis", "Choose factor for plotting on X axis",
                 list, selected = "Factor 1")
   }else{
       temp = fname()
-       selectInput("xaxis", "Choose Factor for plotting on X axis",
+       selectInput("xaxis", "Choose factor for plotting on X axis",
                 temp, selected = temp[1])
     
   }

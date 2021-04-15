@@ -23,9 +23,9 @@ shinyUI(fluidPage(
     sidebarPanel(
             h4(p("Data Input")),
             fileInput("file", "Upload text file"),
-            numericInput("num", "Number of Summary Sentences", 5)
-            
-        ),
+            fileInput("filep", "or upload pdf file (work in progress)"),
+            numericInput("num", "Number of Summary Sentences", 5),
+            ),
     
     mainPanel(
             
@@ -41,16 +41,22 @@ shinyUI(fluidPage(
                     br(), br(),
             ),
             
-                    tabPanel("Article Sentences",
+                    tabPanel("Article Sentences",br(),
+                             verbatimTextOutput("num_sent"),
+                             downloadButton('downloadData1', 'Download Text Sentences'),
+                             br(),br(),
                              h4(p("Original Article Sentences")),
-                             tableOutput("article_sentences")),
+                             tableOutput("article_sentences"),
+                             br()),
                     
                     tabPanel("Article Summary", 
                              h4(p("Selected Summary Sentences")),
+                             p("It takes quite a while, be very patient"),
                              tableOutput("output1")),
             
                     tabPanel("Sentence_scores Plot",
                              h4(p("Plotting TextRank scores for each sentence")),
+                             p("It takes quite a while, be very patient"),
                              plotOutput("output2"))
             
                     )  # tabSetPanel closes

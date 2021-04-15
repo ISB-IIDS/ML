@@ -1,13 +1,12 @@
 name: cluster-analysis
 title:
 username:
-account: iids
+account: isb-iids
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3677405
-bundleId: 4473365
+bundleId: 4412327
 url: https://isb-iids.shinyapps.io/cluster-analysis/
-when: 1618459901.61448
+when: 1617119579.54675
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: fu.r|ggscreeplot.r|umap.R|data/toothpaste.csv|data/UniversalBank.csv|data/wholesalecustomerdata.csv

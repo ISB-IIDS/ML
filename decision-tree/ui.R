@@ -1,5 +1,5 @@
 ###########################################################
-#   Classification and Regression Tree App (ui)           #
+#   Decision Tree App (ui)           #
 ###########################################################
 library("visNetwork")
 shinyUI(
@@ -14,7 +14,6 @@ shinyUI(
         # Upload data:
         h4(p(" Data Input")),
         fileInput("file", "Upload data (csv file)"),
-        sliderInput('sample','Set test sample percentage',10,40,15),
         # h4(p("Select Response Variable")),
         sliderInput('cp','Set complexity parameter',0,0.1,0),
         h4(p(" Data Selection")),
@@ -24,7 +23,9 @@ shinyUI(
         htmlOutput("fyvarselect"),
         htmlOutput("fxvarselect"),
         htmlOutput("samsel"),
-     #   fileInput("filep", "Upload new data for prediction (csv file)")
+        htmlOutput("imputemiss"),
+        sliderInput('sample','Set test sample percentage',10,40,25),
+    #   fileInput("filep", "Upload new data for prediction (csv file)")
       ),   # end of sidebar panel
       
     mainPanel(
@@ -58,15 +59,23 @@ shinyUI(
                              h4("Uploaded Data"), 
                              dataTableOutput("readdata"),tags$head(tags$style("tfoot {display: table-header-group;}")),br(),
                              #verbatimTextOutput("head"),#verbatimTextOutput("tail"),
-                            h4("Data Summary of Selected X Variables"),verbatimTextOutput("summarydata"),
+                            h4("Data Summary of Selected X Variables"),htmlOutput("imout"),verbatimTextOutput("summarydata"),
                             h4("Missing Data Rows"),verbatimTextOutput("missing"),
                             br()),
+                    tabPanel("Data Visualization",br(),
+                             #h4("Select variable for er's outlier test"),
+                             h4("Be patient generating plots"),
+                             plotOutput("dens"),
+                             h4("Histograms"),
+                             plotOutput("hist"),br(),
+                             h4("Bi-Variate Plots"),
+                             #(p('remove missing data variable(s) if any, or impute or drop rows - check  "Data Summary" tab and options in the panel on the left',style="color:black")),
+                             plotOutput("corplot"),
+                             br()),
                     tabPanel("Model Output",br(),
                              (p('Is your outcome (Y) variable factor (catregorical)? 
-                                  If yes, please, make sure that you have check-marked it as a factor variable 
+                                  If yes, please, make sure it is check-marked as a factor variable 
                                 in the left panel.',style="color:red")),
-                             h4('Variable importance'),
-                             verbatimTextOutput('imp'),
                              h4('Number of Rows and Columns in Training Data'),
                              verbatimTextOutput('trainobs'),
                              h4('Model Accuracy/Error of Training Data'),
@@ -78,7 +87,8 @@ shinyUI(
                              #h4("Download Input Data with Predictions"),
                              #downloadButton('downloadData0', 'Download predictions'),
                              h4('Model Result Summary'),
-                             verbatimTextOutput("results"),
+                             verbatimTextOutput("fcptable"),
+                            # verbatimTextOutput("results"),
                             # h4("First 10 predictions of train data"),
                             # p('"Yhat" column is the predicted value.'),
                             # verbatimTextOutput('predictionorg'),
@@ -90,18 +100,21 @@ shinyUI(
                              br()),
                     
                     tabPanel("Decision Tree",#h5('Be patient model may take some time to finish estimation'),
-                            #br(),
-                            h4("Missing Data Rows Count"),verbatimTextOutput("mscount"),
+                            br(),
+                            #h4("Missing Data Rows Count"),verbatimTextOutput("mscount"),
                             #(p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")), 
-                            visNetworkOutput("plot33",height = 600, width = 850), br(),br(),
                             (p('Is your outcome (Y) variable factor (catregorical)? 
-                                  If yes, please, make sure that you have check-marked it as a factor variable 
+                                  If yes, please, make sure that it is check-marked as a factor variable 
                                 in the left panel.',style="color:red")),
-                            h5("To optimally prune the tree, set the complexity parameter (in the left panel) = 0 and
-                            find the row with lowest 'xerror' value in 'Model Results Summary' under 'Model output' tab."),
+                            h4('Variable importance'),
+                            htmlOutput("yout"),
+                            verbatimTextOutput('imp'),
+                            h5("To optimally prune the tree, find the row with lowest 'xerror' value in 
+                               'Model Results Summary' under 'Model output' tab."),
                             h5("Look at the corresponding value of CP
                               in the lowest 'xerror' value row and set the complexity parameter (in the left panel) close to that value."),
                             plotOutput("plot3",height = 1600),
+                            visNetworkOutput("plot33",height = 600, width = 850), br(),br(),
                             br(),
                        #      h4('Visualize cross-validation results'),
                         #     plotOutput("plot1",height = 800)
@@ -116,16 +129,18 @@ shinyUI(
                       #       downloadButton('downloadData3','Download nodes data (Works only in browser)')
                        #      ),
                     #tabPanel("Variable",verbatimTextOutput('imp')),
-                tabPanel("Input Data with Predictions",
-
-                         h4('Model Accuracy/Error of Input Data'),
+                tabPanel("Prediction Input Data",
+                         h4('Number of Rows and Columns in Input Data'),
+                         verbatimTextOutput('inputobs'),
+                         h4('Average Model Accuracy/Error of Input Data'),
                          verbatimTextOutput("validation2"),
 
-                         (p('Is your outcome (Y) variable factor (catregorical)? 
-                                  If yes, please, make sure that you have check-marked it as a factor variable 
-                                in the left panel.',style="color:red")),
+                         #(p('Is your outcome (Y) variable factor (catregorical)? 
+                         #         If yes, please, make sure that it is check-marked as a factor variable 
+                        #        in the left panel.',style="color:red")),
 
-                         h4("Download input data with predictions"),
+                         h4("Download Input data with predictions"),
+                         htmlOutput("yout1"),
                         downloadButton('downloadData0', 'download predictions for input data'),
                         #h4("First 10 rows of predictions for new data (upload prediction data)"),
                         br(),br(),#h4('"Yhat" column is the predicted value.'),
@@ -134,14 +149,17 @@ shinyUI(
                 ),
                
                     tabPanel("Prediction New Data",
-                             h4("Upload new data for prediction, it should be in the same format as 
-                                input data file (csv file with header)"),
+                             h4("Upload new data for prediction, it should have all selected X variables (csv file with header)"),
                              fileInput("filep",""),
+                             h4("New data"),
+                             dataTableOutput("readdatap"),tags$head(tags$style("tfoot {display: table-header-group;}")),br(),br(),
+                             verbatimTextOutput("validation3"),
                              h4("Download new data with predictions"),
                              downloadButton('downloadData1', 'download predictions for new data'),
                              #h4("First 10 rows of predictions for new data (upload prediction data)"),
                              br(),br(),#h4('"Yhat" column is the predicted value.'),
                              #verbatimTextOutput('prediction'),
+                             htmlOutput("yout3"),
                              dataTableOutput("prediction"),tags$head(tags$style("tfoot {display: table-header-group;}")),br(),br()
                              
                              # #h4('Number of Rows and Columns in New Prediction Data'),

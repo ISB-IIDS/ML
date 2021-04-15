@@ -20,8 +20,9 @@ shinyUI(pageWithSidebar(
     fileInput("file", "Upload input data (csv file with header)"),
     h4(p("Data Selection")),
     htmlOutput("Individualvarselect"),
-    htmlOutput("Choicevarselect"),
     htmlOutput("Alternativesvarselect"),
+    htmlOutput("Choicevarselect"),
+    
     
     htmlOutput("Alternativefeaturesvarselect"),
     htmlOutput("Individualfeaturesvarselect"),
@@ -56,8 +57,9 @@ shinyUI(pageWithSidebar(
                          p("Number of observations: 210 individuals' choice context for 4 modes of transporataion, 840 rows.",align="justify"),
                          h4('model specification variables'),
                          h5('individual (observation) ID column for each choice context, every observation must have a row for each alternative'),
-                         h5('choice/outcome column = 1 (0 otherwise)'),
-                         h5('alternatives column = mode (plane, air, bus, car)'),
+                      h5('all available/possible alternatives column = mode (plane, air, bus, car)'),   
+                      h5('choice/outcome column = 1 (0 otherwise)'),
+                         
                          
                          h4('individual specific X variables'),
                          h5('income      = household income'),
@@ -67,8 +69,8 @@ shinyUI(pageWithSidebar(
                          h5("vcost      = customer's estimate of variable cost (dollars)."),
                          h5("gcost      = customer's estimate of generalized cost, a measure inclusive of travel time savings (dollars)."),
                          br(),
-                      p('Note on Multinomial Logit - If you do not have alternative-specific variables (that is no data on alternatives that were not chosen), use discriminant analysis or bayes classifier.',style="color:red"),
-                      h4(tags$a(href= 'https://isb-iids.shinyapps.io/classification/',"Click here to open classification app")),
+                      p('Note on Multinomial Logit - If you do not have alternative-specific variables (that is no data on alternatives that were not chosen), use discriminant analysis or bayes classifier (check classification app).',style="color:red"),
+                      #h4(tags$a(href= 'https://isb-iids.shinyapps.io/classification/',"Click here to open classification app")),
                       #p('Discriminant analysis is like a regression, for categorical outcome variable. 
                       #  Data input required is also similar to regression input file 
                       #  (unlike multinomial-logit data input file.)'),br(),br(),
@@ -83,22 +85,22 @@ shinyUI(pageWithSidebar(
                          h4("Uploaded Data"), 
                          dataTableOutput("readdata"),tags$head(tags$style("tfoot {display: table-header-group;}")),br(),
                          h4("Data Summary of Selected X Variables"),verbatimTextOutput("summary"),h4("Missing Data Rows"),verbatimTextOutput("missing")),
-                tabPanel("Model Output",
+                tabPanel("Model Output",br(),
                          #h4("Select Base Alternative"),
-                         br(),htmlOutput("BaseAlternativeselect"),
-                         (p('Step1: Make sure every individual/observation has one row for each alternative, and only one of those alternatives is marked as "1" and rest are marked as "O" in the choice/outcome column.',style="color:black")),
-                         (p('Step2: Ensure you have selected the correct choice/outcome (0/1) variable under "Data Selection" on the left panel. It should be 0/1 vector',style="color:black")),
-                         (p('Step3: Look at "Data Summary" and select alternative-specific X variables and individual-specific X variables appropriately.',style="color:black")),
-                         h4("Model Summary"),verbatimTextOutput("olssummary"),
-                         h4("Correlation Table"),verbatimTextOutput("correlation"),
+                         #br(),htmlOutput("BaseAlternativeselect"),
+                         (p('Step1: Ensure you have selected the correct available/possible alternatives variable under "Data Selection" on the left panel.',style="color:black")),
+                         verbatimTextOutput("basealtprint"),
+                         (p('Step2: Make sure you have selected correct choice/outcome variable. Make sure every individual/observation has one row for each alternative, and only one of those alternatives is marked as "1" and rest are marked as "0" in the choice/outcome column.',style="color:black")),
                          
-                         h4("Correlation Visulization - Input Data"),
-                         (p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")),
-                         plotOutput("corplot")
-                         ),
+                         (p('Step3: Look at "Data Summary" and select alternative-specific X variables and individual-specific X variables appropriately.',style="color:black")),
+                         h4("Model Summary"),
+                         p("Note: coefficient (estimate) for the base alternative are set to zero.",style="color:red" ),
+                         verbatimTextOutput("olssummary"),
+                         p("Interpretation - one unit increase in variable increases the probability of outcome, over base alternative, by multiple of exponent(Coefficients:Estimate) units."),
+                         br() ),
               #  tabPanel("Correlation",h4("Correlation Table"), verbatimTextOutput("correlation"),h4("Correlation"),plotOutput("corplot")),
                  tabPanel("Prediction Probablities", 
-                          h4("Predicted probablities"),
+                          h4("Predicted probablities input data"),
                           dataTableOutput("probablities"),tags$head(tags$style("tfoot {display: table-header-group;}")),br(),
                           
                           h4(p("Download prediction probabilities for input data")),
@@ -107,23 +109,24 @@ shinyUI(pageWithSidebar(
                           ),
                  tabPanel("Confusion Matrix", 
                           h4("Confusion Matrix Summary"),verbatimTextOutput("confusionmatrix"),
-                          (p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")),verbatimTextOutput("mscount"),
-                # tabPanel("ROC Curve", 
+                         # (p('Remove missing data variable(s) if any - check  "Data Summary" tab',style="color:red")),verbatimTextOutput("mscount"),
                           h4("ROC Curve Summary"),plotOutput("ROC"),br(),br()
                           )
-                 
-                #          h4("Summary OLS standardized model"),
-                #          verbatimTextOutput("olssummarystd")),
+
                 # tabPanel("Residuals Plot",h4("Fitted Values vs Residuals"),
                 #          plotOutput("resplot2"),h4("Fitted Values vs Y"),
                 #          plotOutput("resplot3"),h4("Residuals plot"),
                 #          plotOutput("resplot1")),
-                # tabPanel("Data with predicted Y",tableOutput("datatable")),
-              #tabPanel("Prediction New Data",br(),
-              #         h4("Upload data for prediction should be in the same format as input data (csv file with header) "),
-              #        fileInput("filep", ""),
-              #        h4(p("download predictions for new data")),
-              #         downloadButton('downloadData2', 'download prediction probabilities for new data'))
+                # tabPanel("Data with predicted Y",tableOutput("datatable"))
+              
+              # tabPanel("Prediction New Data",br(),
+              #          h4("Upload data for prediction should be in the same format as input data (csv file with header) "),
+              #         fileInput("filep", ""),
+              #         h4("Predicted probablities new data"),
+              #         dataTableOutput("probablitiespred"),tags$head(tags$style("tfoot {display: table-header-group;}")),br(),
+              #         h4(p("download predictions for new data")),
+              #          downloadButton('downloadData2', 'download prediction probabilities for new data'))
+              
 
     ) #type tabs
   ) #main panel

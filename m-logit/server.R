@@ -51,7 +51,7 @@ library(e1071)
     }
   }, options = list(lengthMenu = c(10, 50, 100), pageLength = 10))
   
-  pred.readdata <- reactive({
+  pred.Dataset <- reactive({
     if (is.null(input$filep)) { return(NULL) }
     else{
       readdata <- as.data.frame(read.csv(input$filep$datapath ,header=TRUE, sep = ","))
@@ -69,25 +69,25 @@ library(e1071)
     }
     })
   
-  output$Choicevarselect <- renderUI({
-    if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
-    if (is.null(input$file)) { return(NULL) }
-    else{
-    selectInput("ChoiceAttr", "Select choice/outcome (0/1) variable",
-               # colnames(Dataset()), colnames(Dataset())[1])
-                setdiff(colnames(Dataset()),input$IndividualAttr), setdiff(colnames(Dataset()),input$IndividualAttr)[1])
-    }
-      })
-
-  
   #select alternatives column:
   output$Alternativesvarselect <- renderUI({
     if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
     if (is.null(input$file)) { return(NULL) }
     else{
-    selectInput("AlternativesAttr", "Select avaialble alternatives variable",
-                       setdiff(colnames(Dataset()),c(input$IndividualAttr,input$ChoiceAttr)), 
-                      setdiff(colnames(Dataset()),c(input$IndividualAttr,input$ChoiceAttr))[1])
+    selectInput("AlternativesAttr", "Select available/potential alternatives variable",
+                       setdiff(colnames(Dataset()),c(input$IndividualAttr)), 
+                      setdiff(colnames(Dataset()),c(input$IndividualAttr))[1])
+    }
+  })
+  
+  output$Choicevarselect <- renderUI({
+    if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
+    if (is.null(input$file)) { return(NULL) }
+    else{
+      selectInput("ChoiceAttr", "Select choice/outcome (0/1) variable",
+                  # colnames(Dataset()), colnames(Dataset())[1])
+                  setdiff(colnames(Dataset()),c(input$IndividualAttr,input$AlternativesAttr)), 
+                  setdiff(colnames(Dataset()),c(input$IndividualAttr,input$AlternativesAttr))[1])
     }
   })
   
@@ -135,6 +135,11 @@ library(e1071)
 
   mydata = reactive({
     mydata = Dataset()[,c(input$IndividualAttr,input$AlternativesAttr,input$ChoiceAttr,input$IndividualfeaturesAttr,input$AlternativefeaturesAttr)]
+    return(mydata)
+  })
+  
+  pred.mydata = reactive({
+    mydata = pred.Dataset()[,c(input$IndividualAttr,input$AlternativesAttr,input$IndividualfeaturesAttr,input$AlternativefeaturesAttr)]
     return(mydata)
   })
   
@@ -236,15 +241,29 @@ ind.features=paste(input$IndividualfeaturesAttr,collapse = "+")
     formula=as.formula(paste(input$ChoiceAttr,"~",rhs(),sep = ""))
     #DCE_data<- mlogit.data(data=Dataset(), choice = input$ChoiceAttr, shape = "long", alt.var = input$AlternativesAttr,id.var = input$IndividualAttr) 
     a <- mlogit(formula=formula,data=mydata(),alt.var = input$AlternativesAttr,id.var = input$IndividualAttr,
-                choice = input$ChoiceAttr,reflevel=input$BaseAlternative)
+                choice = input$ChoiceAttr) # reflevel=input$BaseAlternative # output needs to be reorganized
     return(a)
   })
   
+  output$basealtprint = renderPrint({
+    if (is.null(input$file)) {return(NULL)}
+    else {
+      paste("Base Alternative - ", colnames(basealt())[1])
+    }
+  })
+  
   ols.pred = reactive({
-    b <- predict(ols(), newdata=pred.readdata())
+    pred.mydata.idx= mlogit.data(pred.mydata()) #, alt.levels = input$AlternativesAttr, id.var = input$IndividualAttr)
+    b <- predict(ols(), newdata=pred.mydata.idx)
     return(b)
   })
 
+  output$ols.pred = renderPrint({
+    if (is.null(input$file)) {return(NULL)}
+    else {
+      (ols.pred())
+    }})
+    
   
   output$olssummary = renderPrint({
     if (is.null(input$file)) {return(NULL)}
@@ -259,11 +278,11 @@ ind.features=paste(input$IndividualfeaturesAttr,collapse = "+")
     data.fit=(fitted(object = ols(), outcome=FALSE))
     trial=Rfast::rowMaxs(data.fit,value = FALSE)
     data.fit=as.data.frame(data.fit)
-    data.fit$predict=colnames(data.fit)[trial]
+    data.fit$predict=as.factor(colnames(data.fit)[trial])
     
-    choice.col=(as.vector(Dataset()[,input$ChoiceAttr]))
-    data.fit$actual=as.vector(Dataset()[which(choice.col==1),input$AlternativesAttr])
-    data.try=as.data.frame(data.fit)
+    choice.col=(as.vector(mydata()[,input$ChoiceAttr]))
+    data.fit$actual=as.factor(mydata()[which(choice.col==1),input$AlternativesAttr])
+    data.try=(data.fit)
     
     caret::confusionMatrix(as.factor(data.try$predict),as.factor(data.try$actual))
     }
@@ -272,16 +291,19 @@ ind.features=paste(input$IndividualfeaturesAttr,collapse = "+")
   output$probablities = renderDataTable({
     if (is.null(input$file)) {return(NULL)}
     else {
-  data.fit=(fitted(object = ols(), outcome=FALSE))
-    trial=Rfast::rowMaxs(data.fit,value = FALSE)
-    data.fit=as.data.frame(data.fit)
-    data.fit$predicted=colnames(data.fit)[trial]
+     data.fit=(fitted(object = ols(), outcome=FALSE))
+     #trial=Rfast::rowMaxs(data.fit,value = FALSE)
+     #data.fit$predicted=colnames(data.fit)[trial]
+   
+  #  choice.col=(as.vector(mydata()[,input$ChoiceAttr]))
+  #  data.fit$actual=as.vector(mydata()[which(choice.col==1),input$AlternativesAttr])
+  # data.fit$obs_ID=as.vector(mydata()[which(choice.col==1),input$IndividualAttr])
+  # #data.try=as.data.frame(data.fit)
 
-  choice.col=(as.vector(Dataset()[,input$ChoiceAttr]))
-  data.fit$actual=as.vector(Dataset()[which(choice.col==1),input$AlternativesAttr])
-  data.fit$obs_ID=as.vector(Dataset()[which(choice.col==1),input$IndividualAttr])
-  #data.try=as.data.frame(data.fit)
-  data.fit
+     data.fit1=as.data.frame(as.vector(t(data.fit)))
+     colnames(data.fit1)="predicted.prob"
+     data.try=as.data.frame( cbind(data.fit1, mydata() ))
+     data.try
     }
   }, options = list(lengthMenu = c(10, 50, 100), pageLength = 10))
   
@@ -293,7 +315,7 @@ ind.features=paste(input$IndividualfeaturesAttr,collapse = "+")
     data.fit=as.data.frame(data.fit)
     #data.fit$predict.choice=colnames(data.fit)[trial]
     
-    choice.col=(as.vector(Dataset()[,input$ChoiceAttr]))
+    choice.col=(as.vector(mydata()[,input$ChoiceAttr]))
     #label_true=as.vector(Dataset()[which(choice.col==1),input$AlternativesAttr])
     
     
@@ -301,7 +323,7 @@ ind.features=paste(input$IndividualfeaturesAttr,collapse = "+")
     #data.try=as.data.frame(data.fit)
     
     #test_df=data[data$choice==1,]
-    test_df=Dataset()[which(choice.col==1),input$AlternativesAttr]
+    test_df=mydata()[which(choice.col==1),input$AlternativesAttr]
     true_label <- dummies::dummy(test_df, sep = ".")
     
     colnames(true_label) <- gsub(".*?\\.", "", colnames(true_label))
@@ -338,17 +360,39 @@ ind.features=paste(input$IndividualfeaturesAttr,collapse = "+")
     filename = function() { "Predicted Probabilities.csv" },
     content = function(file) {
       data.fit=(fitted(object = ols(), outcome=FALSE))
-      trial=Rfast::rowMaxs(data.fit,value = FALSE)
-      data.fit=as.data.frame(data.fit)
-      data.fit$predict=colnames(data.fit)[trial]
-      choice.col=(as.vector(Dataset()[,input$ChoiceAttr]))
-      data.fit$actual=as.vector(Dataset()[which(choice.col==1),c(input$AlternativesAttr)])
-      data.fit$obs_ID=as.vector(Dataset()[which(choice.col==1),c(input$IndividualAttr)])
-      data.try=as.data.frame(c(data.fit))
+      # trial=Rfast::rowMaxs(data.fit,value = FALSE)
+      # data.fit=as.data.frame(data.fit)
+      # data.fit$predict=colnames(data.fit)[trial]
+      # choice.col=(as.vector(Dataset()[,input$ChoiceAttr]))
+      # data.fit$actual=as.vector(Dataset()[which(choice.col==1),c(input$AlternativesAttr)])
+      # data.fit$obs_ID=as.vector(Dataset()[which(choice.col==1),c(input$IndividualAttr)])
+
+      data.fit1=as.data.frame(as.vector(t(data.fit)))
+      colnames(data.fit1)="predicted.prob"
+      data.try=as.data.frame( cbind(data.fit1, mydata() ))
       write.csv(data.try, file, row.names=F, col.names=F)
     }
   )  
   
+  output$probablitiespred = renderDataTable({
+    if (is.null(input$file)) {return(NULL)}
+    else {
+      data.fit=(fitted(object = ols.pred(), outcome=FALSE))
+      # trial=Rfast::rowMaxs(data.fit,value = FALSE)
+      # data.fit=as.data.frame(data.fit)
+      # data.fit$predicted=colnames(data.fit)[trial]
+      # 
+      # choice.col=(as.vector(pred.Dataset()[,input$ChoiceAttr]))
+      # data.fit$actual=as.vector(pred.Dataset()[which(choice.col==1),input$AlternativesAttr])
+      # data.fit$obs_ID=as.vector(pred.Dataset()[which(choice.col==1),input$IndividualAttr])
+      # #data.try=as.data.frame(data.fit)
+      
+      data.fit1=as.data.frame(as.vector(t(data.fit)))
+      colnames(data.fit1)="predicted.prob"
+      data.try=as.data.frame( cbind(data.fit1, pred.mydata() ))
+      data.fit
+    }
+  }, options = list(lengthMenu = c(10, 50, 100), pageLength = 10))
   
   output$downloadData2 <- downloadHandler(
     filename = function() { "Prediction New Data.csv" },
@@ -356,14 +400,18 @@ ind.features=paste(input$IndividualfeaturesAttr,collapse = "+")
       if (is.null(input$filep)) {return(NULL)}
       else { 
         data.fit=(fitted(object = ols.pred(), outcome=FALSE))
-        trial=Rfast::rowMaxs(data.fit,value = FALSE)
-        data.fit=as.data.frame(data.fit)
-        data.fit$predict=colnames(data.fit)[trial]
-        choice.col=(as.vector(Dataset()[,input$ChoiceAttr]))
-        data.fit$actual=as.vector(Dataset()[which(choice.col==1),c(input$AlternativesAttr)])
-        data.fit$obs_ID=as.vector(Dataset()[which(choice.col==1),c(input$IndividualAttr)])
-        data.try=as.data.frame(c(data.fit))
-        write.csv(data.try, file, row.names=F, col.names=F) 
+        # trial=Rfast::rowMaxs(data.fit,value = FALSE)
+        # data.fit=as.data.frame(data.fit)
+        # data.fit$predict=colnames(data.fit)[trial]
+        # choice.col=(as.vector(Dataset()[,input$ChoiceAttr]))
+        # data.fit$actual=as.vector(Dataset()[which(choice.col==1),c(input$AlternativesAttr)])
+        # data.fit$obs_ID=as.vector(Dataset()[which(choice.col==1),c(input$IndividualAttr)])
+        # data.try=as.data.frame(c(data.fit))
+        
+        data.fit1=as.data.frame(as.vector(t(data.fit)))
+        colnames(data.fit1)="predicted.prob"
+        data.try=as.data.frame( cbind(data.fit1, pred.mydata() ))
+        write.csv(data.try, file, row.names=F, col.names=F)
       }
                               }
   ) 

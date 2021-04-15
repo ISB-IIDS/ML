@@ -5,8 +5,8 @@ account: iids
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3766441
-bundleId: 4335767
+bundleId: 4420780
 url: https://isb-iids.shinyapps.io/text_summarization/
-when: 1615557012.59361
+when: 1617287877.29009
 asMultiple: FALSE
 asStatic: FALSE

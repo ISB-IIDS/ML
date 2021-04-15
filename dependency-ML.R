@@ -37,12 +37,13 @@ try(require("fmsb")||install.packages("fmsb"))
 try(require("PerformanceAnalytics")||install.packages("PerformanceAnalytics"))
 try(require("sparkline")||install.packages("sparkline"))
 
-if (!require("plot3D")) {install.packages("plot3D")}
-if (!require("Spectrum")) {install.packages("Spectrum")}
+if(!require("plot3D")) {install.packages("plot3D")}
+if(!require("ROCR")) {install.packages("ROCR")}
+if(!require("Spectrum")) {install.packages("Spectrum")}
 if(!require("textrank")) {install.packages("textrank")}
 if(!require("Rtsne")) {install.packages("Rtsne")}
 if(!require("randomcoloR")) {install.packages("randomcoloR")}
-if(!require("shinyWidgets")) {install.packages("shinyWidgets")}
+if(!require("shifnyWidgets")) {install.packages("shinyWidgets")}
 if(!require("stringr")) {install.packages("stringr")}
 if(!require("e1071")) {install.packages("e1071")}
 if(!require("EnvStats")) {install.packages("EnvStats")}
@@ -54,7 +55,7 @@ if(!require("corrplot")) {install.packages("corrplot")}
 if(!require("RColorBrewer")){install.packages("RColorBrewer")}
 if(!require("rfm")) {install.packages("rfm")}
 if(!require("lubridate")) {install.packages("lubridate")}
-if(!require("ggbiplot")) {install_github("vqv/ggbiplot")}
+#if(!require("ggbiplot")) {install_github("vqv/ggbiplot")}
 if(!require("plyr")) {install.packages("plyr")}
 if(!require("scales")) {install.packages("scales")}
 if(!require("grid")) {install.packages("grid")}
@@ -63,7 +64,12 @@ if(!require("cluster")) {install.packages("cluster")}
 if(!require("mclust")) {install.packages("mclust")}
 if(!require("MASS")) {install.packages("MASS")}
 if(!require("mda")) {install.packages("mda")}
-if(!require("klaR")) {install.packages("klaR")}
+#if(!require("klaR")) {install.packages("klaR")}
+if (!require("plyr")) {install.packages("plyr")}
+if (!require("grid")) {install.packages("grid")}
+if (!require("scales")) {install.packages("scales")}
 if(!require("gridExtra")) {install.packages("gridExtra")}
 if(!require("tesseract")) {install.packages("tesseract")}
+
+
 warnings()

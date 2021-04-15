@@ -10,6 +10,7 @@ if(!require("reshape2")){install.packages("reshape2")}
 if (!require("corrplot")) {install.packages("corrplot")}
 if (!require("hydroGOF")) {install.packages("hydroGOF")}
 #if (!require("PerformanceAnalytics")) {install.packages("PerformanceAnalytics")}
+if (!require("mice")) {install.packages("mice")}
 
 library(shiny)
 library(pastecs)
@@ -19,6 +20,7 @@ library(ggplot2)
 library(reshape2)
 library(corrplot)
 library(hydroGOF)
+library(mice)
 #library(PerformanceAnalytics)
 
 # library(gplot)
@@ -40,7 +42,7 @@ output$samsel <- renderUI({
   }
 })
 
-Dataset <- reactive({
+Datasetf1 <- reactive({
   if (is.null(input$file)) {return(NULL)}
   else {
   if (input$obs=="full dataset") { return(Datasetf()) }
@@ -64,6 +66,40 @@ Dataset <- reactive({
   }  }
 })
 
+output$imputemiss <- renderUI({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    #if (identical(Datasetf(), '') || identical(Datasetf(),data.frame())) return(NULL)
+    if (1==0) {p("error")}
+    else {
+      selectInput("imputemiss", "Impute missing vaulues or drop missing value rows", 
+                  c("do not impute or drop rows", "impute missing values", "drop missing value rows"), selected = "drop missing value rows")
+    }}
+})
+
+output$imout <- renderUI({
+  if (is.null(input$file)) {return(NULL)}
+  if (input$imputemiss == "do not impute or drop rows") {return(NULL)}
+  else if ((input$imputemiss == "impute missing values")) {
+    p("Note: missing values imputed - check options in the panel on the left",style="color:black")
+  }
+  else { p("Note: missing value rows dropped - check options in the panel on the left",style="color:black") }
+})
+
+Dataset = reactive({
+  if (input$imputemiss == "do not impute or drop rows") 
+  { mydataimp=Datasetf1() }
+  else if (input$imputemiss == "impute missing values") 
+  { mydata = Datasetf1()
+  mice_mod = mice(mydata, printFlag=FALSE)
+  mydataimp <- complete(mice_mod) }
+  else # (input$imputemiss == "drop missing value rows") 
+  { mydata = Datasetf1()
+  mydataimp = na.omit(mydata)  }
+  return(mydataimp)
+})
+
+
 output$readdata <- renderDataTable({
   if (is.null(input$file)) {return(NULL)}
   else {
@@ -79,8 +115,15 @@ Datasetp <- reactive({
   }
 })
 
+output$readdatap <- renderDataTable({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    Datasetp()
+  }
+}, options = list(lengthMenu = c(5, 30, 50,100), pageLength = 5))
+
 nu.Dataset = reactive({
-  data = Dataset()
+  data = Datasetf1()
   Class = NULL
   for (i in 1:ncol(data)){
     c1 = class(data[,i])
@@ -93,21 +136,40 @@ nu.Dataset = reactive({
 
 # Select variables:
 output$yvarselect <- renderUI({
-  if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
+  if (identical(Datasetf(), '') || identical(Datasetf(),data.frame())) return(NULL)
   if (is.null(input$file)) {return(NULL)}
   else {
   selectInput("yAttr", "Select Y variable",
-                     colnames(nu.Dataset()), colnames(nu.Dataset())[1])
+                     colnames(nu.Dataset()), colnames(nu.Dataset()[,-1])[1])
   }
 })
 
+output$yout <- renderUI({
+  if (identical(Datasetf(), '') || identical(Datasetf(),data.frame())) return(NULL)
+  p("Y is",input$yAttr,style="color:red")
+})
+
+output$yout1 <- renderUI({
+  if (identical(Datasetf(), '') || identical(Datasetf(),data.frame())) return(NULL)
+  p("Predicted Y is",input$yAttr,style="color:red")
+})
+
+output$yout2 <- renderUI({
+  if (identical(Datasetf(), '') || identical(Datasetf(),data.frame())) return(NULL)
+  p("Y is",input$yAttr,style="color:red")
+})
+
+output$yout3 <- renderUI({
+  if (identical(Datasetf(), '') || identical(Datasetf(),data.frame())) return(NULL)
+  p("Predicted Y is",input$yAttr,style="color:red")
+})
 
 output$xvarselect <- renderUI({
-  if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
+  if (identical(Datasetf(), '') || identical(Datasetf(),data.frame())) return(NULL)
   if (is.null(input$file)) {return(NULL)}
   else {
   checkboxGroupInput("xAttr", "Select X variables",
-                     setdiff(colnames(Dataset()),input$yAttr), setdiff(colnames(Dataset()),input$yAttr))
+                     setdiff(colnames(Datasetf1()),input$yAttr), setdiff(colnames(Datasetf1()[,-1]),input$yAttr))
   }
 })
 
@@ -128,7 +190,7 @@ nu1.Dataset = reactive({
 })
 
 output$fxvarselect <- renderUI({
-  if (identical(Dataset(), '') || identical(Dataset(),data.frame())) return(NULL)
+  if (identical(Datasetf(), '') || identical(Datasetf(),data.frame())) return(NULL)
   if (is.null(input$file)) {return(NULL)}
   else {
   checkboxGroupInput("fxAttr", "Select factor (categorical) variables in X",
@@ -142,15 +204,12 @@ mydata = reactive({
   if (!is.null(input$fxAttr)){
   for (j in 1:length(input$fxAttr)){
       mydata1[,input$fxAttr[j]] = factor(mydata1[,input$fxAttr[j]])
-                                    }
-                              }
+                                    }}
   return(mydata1)
-  
 })
 
 pred.readdata = reactive({
   mydata = Datasetp()
-  
   if (!is.null(input$fxAttr)){
     for (j in 1:length(input$fxAttr)){
       mydata[,input$fxAttr[j]] = factor(mydata[,input$fxAttr[j]])
@@ -160,10 +219,12 @@ pred.readdata = reactive({
   
 })
 
-
 Dataset.Predict <- reactive({
   fxc = setdiff(input$fxAttr, input$yAttr)
-  mydata = pred.readdata()[,c(input$xAttr)]
+  
+  if ((input$yAttr %in%  colnames(pred.readdata()) ) ) {
+  mydata = pred.readdata()[,c(input$yAttr,input$xAttr)]}
+  else {mydata = pred.readdata()[,c(input$xAttr)]}
   
   if (!is.null(input$fxAttr)){
     for (j in 1:length(fxc)){
@@ -198,6 +259,33 @@ a = seq(from = 0, to=200,by = 4)
 j = length(which(a < ncol(nu.data)))
 out = list(Dimensions = Dimensions,Summary =Summary ,Tail=Tail,fa.data,nu.data,a,j, Head=Head,MissingDataRows=Missing,missing.data.rows.count=mscount)
 return(out)
+})
+
+testsample =  reactive({
+  set.seed(5898)
+  sample(1:nrow(mydata()), round(nrow(mydata())*((input$sample)/100)))
+})
+
+train_data = reactive({
+  mydata() #[-testsample(),]
+})
+
+test_data = reactive({
+  mydata() #[testsample(),]
+})
+
+output$trainobs = renderPrint({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    dim( train_data())
+  }
+})
+
+output$testobs = renderPrint({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    dim( test_data())
+  }
 })
 
 output$head = renderPrint({
@@ -292,6 +380,20 @@ output$summary = renderPrint({
 #   })
 # }
 
+output$hist = renderPlot({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    hist(mydata())#[,input$xAttr],main=paste("Histogram of" ,input$xAttr), xlab=input$xAttr)
+  }
+})
+
+output$dens = renderPlot({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    datadensity(out()[[5]])#[,input$xAttr],main=paste("Histogram of" ,input$xAttr), xlab=input$xAttr)
+  }
+})
+
 output$heatmap = renderPlot({ 
     qplot(x=Var1, y=Var2, data=melt(cor(out()[[5]], use = "pairwise.complete.obs")), fill=value, geom="tile") +
     scale_fill_gradient2(limits=c(-1, 1))
@@ -314,11 +416,19 @@ output$heatmap1 = renderPlot({
 output$correlation = renderPrint({
   if (is.null(input$file)) {return(NULL)}
   else {
-  cor(out()[[5]], use = "pairwise.complete.obs")
+  round(cor(out()[[5]], use = "pairwise.complete.obs"),4)
   }
   })
 
 output$corplot = renderPlot({
+  if (is.null(input$file)) {return(NULL)}
+  else {
+    #pairs(out()[[5]])
+    pairs(out()[[5]],pch=20, col="grey")
+  }
+})
+
+output$corplot1 = renderPlot({
   if (is.null(input$file)) {return(NULL)}
   else {
   my_data = out()[[5]]
@@ -334,7 +444,7 @@ output$corplot = renderPlot({
 ols = reactive({
     rhs = paste(input$xAttr, collapse = "+")
     formula= as.formula(paste(input$yAttr,"~", rhs , sep=""))
-    ols = lm(formula, data = mydata())
+    ols = lm(formula, data = test_data())
   return(ols)
 })
 
@@ -389,6 +499,8 @@ output$summarystd = renderPrint({
   }
 })
 
+
+
 output$resplot1 = renderPlot({
   if (is.null(input$file)) {return(NULL)}
   else {
@@ -406,7 +518,7 @@ output$resplot2 = renderPlot({
 output$resplot3 = renderPlot({
   if (is.null(input$file)) {return(NULL)}
   else {
-  plot(mydata()[,input$yAttr],ols()$fitted.values, xlab="Actual Y", ylab="Predicted Y")
+  plot(test_data()[,input$yAttr],predict(ols(),test_data()), xlab="Actual Y", ylab="Predicted Y")
   abline(0,1)  
   }
 })
@@ -428,15 +540,36 @@ output$olssummarystd = renderPrint({
 
 output$validation = renderPrint({
   if (is.null(input$file)) {return(NULL)}
-    dft = data.frame(scale(data.frame(y = mydata()[,input$yAttr], yhat = ols()$fitted.values  )))
+    dft = data.frame(scale(data.frame(y = test_data()[,input$yAttr], yhat = predict(ols(),test_data())  )))
     mse.y = mse(dft$y,dft$yhat)
-    out = list(Mean_Square_Error_of_Standardized_Response = mse.y)
+    out = list(Number_of_Observations = nrow(test_data()),Mean_Square_Error_of_Standardized_Response = mse.y)
     out
+})
+
+output$validationtr = renderPrint({
+  if (is.null(input$file)) {return(NULL)}
+  dft = data.frame(scale(data.frame(y = train_data()[,input$yAttr], yhat = predict(ols(),train_data())  )))
+  mse.y = mse(dft$y,dft$yhat)
+  out = list(Number_of_Observations = nrow(train_data()),Mean_Square_Error_of_Standardized_Response_Training_Data = mse.y)
+  out
+})
+
+output$validationnew = renderPrint({
+  if (is.null(input$filep)) {return(NULL)}
+  if ((input$yAttr %in%  colnames(Dataset.Predict()) ) ) {
+  dft = data.frame(scale(data.frame(y = Dataset.Predict()[,input$yAttr], yhat = predict(ols(),Dataset.Predict())  )))
+  mse.y = mse(dft$y,dft$yhat)
+  out = list(Number_of_Observations = nrow(Dataset.Predict()),Mean_Square_Error_of_Standardized_Response_Training_Data = mse.y)
+  out}
+ #  p("Number_of_Observations -", nrow(Dataset.Predict()),": Mean_Square_Error_of_Standardized_Response_New_Data -", mse.y)}
+  else {return(NULL)}
 })
 
 prediction = reactive({
   val = predict(ols(),Dataset.Predict())
   out = data.frame(Yhat = val, Dataset.Predict())
+  names(out)[1] = paste0("Pred.",input$yAttr)
+  return(out)
 })
 output$prediction =  renderPrint({
   if (is.null(input$filep)) {return(NULL)}
@@ -451,8 +584,10 @@ output$prediction <- renderDataTable({
 }, options = list(lengthMenu = c(5, 30, 50,100), pageLength = 30))
 
 inputprediction = reactive({
-  val = predict(ols(),Dataset())
-  out = data.frame(Yhat = val, mydata())
+  val = predict(ols(),train_data())
+  out = data.frame(Yhat = val, train_data())
+  names(out)[1] = paste0("Pred.",input$yAttr)
+  return(out)
 })
 
 output$inputprediction =  renderPrint({
